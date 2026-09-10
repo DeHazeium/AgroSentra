@@ -118,3 +118,17 @@ This means:
 - unchanged sensor values are still re-checked every 3 seconds
 
 The ESP32 firmware is already configured with a `3000 ms` Firebase live upload interval, so when the device is running the website and firmware operate on the same 3-second cadence.
+
+
+## Premium theme-aware loader + new device image
+
+This build updates the AgroSentra001 device image and replaces the previous animated loading screen with a cleaner premium loader.
+
+Changes:
+- new AgroSentra001 device render
+- much larger AgroSentra logo on loading
+- minimal thin loading indicator
+- subtle premium glow only
+- no orbit rings, scanning streaks, or busy background effects
+- loading screen automatically follows the theme previously saved by the user
+- supports Agro Dark, Midnight, and Light themes before the main dashboard finishes loading

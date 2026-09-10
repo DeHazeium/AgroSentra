@@ -10,42 +10,42 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="./styles.css?v=5">
+  <link rel="stylesheet" href="./styles.css?v=6">
 
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+(function () {
+  try {
+    const savedTheme = localStorage.getItem("agrosentra-theme-v2") || "dark";
+    const allowed = ["dark", "midnight", "light"];
+    document.documentElement.dataset.loaderTheme =
+      allowed.includes(savedTheme) ? savedTheme : "dark";
+  } catch (_) {
+    document.documentElement.dataset.loaderTheme = "dark";
+  }
+})();
+</script>
+
 </head>
 
 <body data-theme="dark" class="agrosentra-app">
 
 <div id="agrosentraLoader" class="agrosentra-loader" aria-label="Loading AgroSentra">
-  <div class="loader-bg-orbit orbit-one"></div>
-  <div class="loader-bg-orbit orbit-two"></div>
-
-  <div class="loader-content">
-    <div class="loader-logo-wrap">
-      <div class="loader-logo-glow"></div>
-      <div class="loader-scan-line"></div>
-
-      <img
-        src="./agrosentra-logo.png"
-        alt="AgroSentra"
-        class="loader-logo"
-      >
+  <div class="premium-loader">
+    <div class="premium-loader-logo-wrap">
+      <div class="premium-loader-glow"></div>
+      <img src="./agrosentra-logo.png" alt="AgroSentra" class="premium-loader-logo">
     </div>
 
-    <div class="loader-title">AGROSENTRA001</div>
-    <div class="loader-subtitle">Soil Monitoring Dashboard</div>
+    <div class="premium-loader-meta">
+      <span>AGROSENTRA001</span>
+      <small>Soil Monitoring System</small>
+    </div>
 
-    <div class="loader-progress-wrap">
-      <div class="loader-progress-track">
-        <div class="loader-progress-bar"></div>
-      </div>
-
-      <div class="loader-status">
-        <span class="loader-status-dot"></span>
-        Initializing monitoring interface
-      </div>
+    <div class="premium-loader-line">
+      <span></span>
     </div>
   </div>
 </div>
@@ -176,7 +176,7 @@
 
         <div class="hero-device">
           <div class="hero-device-glow"></div>
-          <img src="./agrosentra001-model.png" alt="AgroSentra001 monitoring unit">
+          <img src="./agrosentra001-model-v2.png?v=6" alt="AgroSentra001 monitoring unit">
         </div>
       </article>
 
@@ -701,7 +701,7 @@
       <article class="device-hero-panel panel">
         <div class="device-image-wrap">
           <div class="device-image-glow"></div>
-          <img src="./agrosentra001-model.png" alt="AgroSentra001 soil monitoring device">
+          <img src="./agrosentra001-model-v2.png?v=6" alt="AgroSentra001 soil monitoring device">
         </div>
 
         <div class="device-description">
@@ -875,7 +875,7 @@
   if (!loader) return;
 
   const startedAt = performance.now();
-  const minimumVisibleTime = 1050;
+  const minimumVisibleTime = 900;
 
   function hideLoader() {
     const elapsed = performance.now() - startedAt;
@@ -887,7 +887,7 @@
 
       window.setTimeout(function () {
         loader.remove();
-      }, 650);
+      }, 520);
     }, wait);
   }
 
@@ -902,6 +902,6 @@
 })();
 </script>
 
-<script type="module" src="./app.js?v=5"></script>
+<script type="module" src="./app.js?v=6"></script>
 </body>
 </html>
