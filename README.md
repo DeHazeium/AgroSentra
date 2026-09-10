@@ -48,3 +48,11 @@ This package does not require:
 - public/ folder
 
 Firebase is used only as the Realtime Database backend.
+
+
+## Branding
+
+This version includes the AgroSentra logo as `agrosentra-logo.png`.
+
+Dashboard credit:
+`Dashboard developed by Muhammad Irfan | Faculty of Electrical Engineering | Part 5`
