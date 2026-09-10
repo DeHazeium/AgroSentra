@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#05090d">
-  <title>AgroSentra | Smart Soil Monitoring</title>
+  <title>AgroSentra001 | Soil Monitoring</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -16,778 +16,822 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
-<body>
-  <div class="page-glow glow-one"></div>
-  <div class="page-glow glow-two"></div>
+<body data-theme="dark">
 
-  <div class="app">
-    <aside class="sidebar">
-      <div class="brand">
-        <div class="brand-logo-wrap">
-          <div class="brand-glow"></div>
-          <img
-            src="./agrosentra-logo.png"
-            alt="AgroSentra"
-            class="brand-image"
-          >
-        </div>
+<div class="ambient ambient-a"></div>
+<div class="ambient ambient-b"></div>
 
-        <div class="brand-credit">
-          <span>Dashboard developed by</span>
-          <strong>Muhammad Irfan</strong>
-          <span>Faculty of Electrical Engineering</span>
-          <span>Part 5</span>
-        </div>
+<div class="app-shell">
+
+  <aside class="sidebar">
+    <div class="sidebar-brand">
+      <div class="brand-glow"></div>
+      <img src="./agrosentra-logo.png" alt="AgroSentra" class="sidebar-logo">
+
+      <div class="developer-credit">
+        <span>Dashboard developed by</span>
+        <strong>Muhammad Irfan</strong>
+        <span>Faculty of Electrical Engineering</span>
+        <span>Part 5</span>
+      </div>
+    </div>
+
+    <nav class="main-nav">
+      <button class="nav-item active" data-view="dashboard">
+        <i data-lucide="layout-dashboard"></i>
+        <span>Dashboard</span>
+      </button>
+
+      <button class="nav-item" data-view="live">
+        <i data-lucide="activity"></i>
+        <span>Live Soil Data</span>
+      </button>
+
+      <button class="nav-item" data-view="history">
+        <i data-lucide="history"></i>
+        <span>History</span>
+      </button>
+
+      <div class="nav-divider"></div>
+
+      <button class="nav-item accent-nav" data-view="analytics">
+        <i data-lucide="sparkles"></i>
+        <span>AI Analytics</span>
+      </button>
+
+      <button class="nav-item accent-nav" data-view="weather">
+        <i data-lucide="cloud-sun"></i>
+        <span>External Weather</span>
+      </button>
+
+      <button class="nav-item accent-nav" data-view="device">
+        <i data-lucide="cpu"></i>
+        <span>Device Info</span>
+      </button>
+
+      <div class="nav-divider"></div>
+
+      <button class="nav-item" data-view="settings">
+        <i data-lucide="settings"></i>
+        <span>Settings</span>
+      </button>
+    </nav>
+
+    <div class="sidebar-status">
+      <span id="sidebarStatusDot" class="online-dot waiting"></span>
+      <div>
+        <strong id="sidebarDeviceStatus">Connecting...</strong>
+        <span id="sidebarLastUpdate">Waiting for Firebase</span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main-content">
+
+    <header class="topbar">
+      <button class="mobile-menu" id="mobileMenuButton" aria-label="Open menu">
+        <i data-lucide="menu"></i>
+      </button>
+
+      <div class="page-heading">
+        <span id="pageEyebrow">AGROSENTRA001</span>
+        <h1 id="pageTitle">Dashboard</h1>
       </div>
 
-      <nav class="navigation">
-        <button class="nav-button active">
-          <i data-lucide="layout-dashboard"></i>
-          <span>Dashboard</span>
-        </button>
+      <div class="topbar-actions">
+        <div class="location-chip">
+          <i data-lucide="map-pin"></i>
+          <span id="topbarLocation">The Waterfront Hotel, Kuching</span>
+        </div>
 
-        <button class="nav-button">
-          <i data-lucide="activity"></i>
-          <span>Live Soil Data</span>
-        </button>
-
-        <button class="nav-button">
-          <i data-lucide="history"></i>
-          <span>History</span>
-        </button>
-
-        <button class="nav-button">
-          <i data-lucide="settings"></i>
-          <span>Settings</span>
-        </button>
-      </nav>
-
-      <div class="sidebar-message">
-        <i data-lucide="leaf"></i>
-        <p>
-          better data.<br>
-          healthier soil.<br>
-          smarter farming.
-        </p>
+        <div class="connection-chip">
+          <span id="topStatusDot" class="online-dot waiting"></span>
+          <span id="topStatusText">Connecting</span>
+        </div>
       </div>
-    </aside>
+    </header>
 
-    <main class="main">
-      <section class="hero">
-        <div class="hero-content">
-          <div class="hero-logo-wrap">
-            <div class="hero-logo-glow"></div>
-            <img
-              src="./agrosentra-logo.png"
-              alt="AgroSentra"
-              class="hero-logo"
-            >
-          </div>
-          <div class="eyebrow">SOIL MONITORING SYSTEM</div>
+    <!-- ===================================================
+         DASHBOARD
+    ==================================================== -->
+    <section class="view active" id="view-dashboard">
 
-          <h1>
-            Monitor your soil.
-            <span>Grow smarter.</span>
-          </h1>
-
+      <article class="hero-card">
+        <div class="hero-copy">
+          <span class="eyebrow">SOIL MONITORING SYSTEM</span>
+          <h2>Monitor your soil.<br><span>Understand the change.</span></h2>
           <p>
-            Real-time soil condition, nutrient and system monitoring powered by AgroSentra.
+            AgroSentra001 combines real-time soil measurements, historical trends,
+            environmental context and local analytics in one monitoring platform.
           </p>
+
+          <div class="hero-actions">
+            <button class="primary-action" data-jump="live">
+              <i data-lucide="activity"></i>
+              View live soil data
+            </button>
+
+            <button class="secondary-action" data-jump="analytics">
+              <i data-lucide="sparkles"></i>
+              Open analytics
+            </button>
+          </div>
         </div>
 
-        <div class="device-status">
-          <span id="statusDot" class="status-dot waiting"></span>
+        <div class="hero-device">
+          <div class="hero-device-glow"></div>
+          <img src="./agrosentra001-model.png" alt="AgroSentra001 monitoring unit">
+        </div>
+      </article>
 
+      <div class="dashboard-summary-grid">
+        <article class="summary-card green">
+          <div class="summary-icon"><i data-lucide="droplets"></i></div>
           <div>
-            <strong id="connectionStatus">Connecting...</strong>
-            <span id="lastUpdated">Waiting for Firebase</span>
-          </div>
-        </div>
-      </section>
-
-      <section class="sensor-grid">
-        <article class="sensor-card orange reveal-card">
-          <div class="sensor-header">
-            <div class="sensor-icon"><i data-lucide="zap"></i></div>
-            <span>Voltage</span>
-          </div>
-
-          <div class="sensor-value">
-            <strong id="voltage">--</strong>
-            <small>V</small>
+            <span>Soil Moisture</span>
+            <strong><b id="dashMoisture">--</b><small>%</small></strong>
           </div>
         </article>
 
-        <article class="sensor-card orange reveal-card">
-          <div class="sensor-header">
-            <div class="sensor-icon"><i data-lucide="gauge"></i></div>
-            <span>Current</span>
-          </div>
-
-          <div class="sensor-value">
-            <strong id="current">--</strong>
-            <small>mA</small>
-          </div>
-        </article>
-
-        <article class="sensor-card green reveal-card">
-          <div class="sensor-header">
-            <div class="sensor-icon"><i data-lucide="thermometer"></i></div>
-            <span>Temperature</span>
-          </div>
-
-          <div class="sensor-value">
-            <strong id="temperature">--</strong>
-            <small>°C</small>
-          </div>
-        </article>
-
-        <article class="sensor-card green reveal-card">
-          <div class="sensor-header">
-            <div class="sensor-icon"><i data-lucide="droplets"></i></div>
-            <span>Moisture</span>
-          </div>
-
-          <div class="sensor-value">
-            <strong id="moisture">--</strong>
-            <small>%</small>
-          </div>
-        </article>
-
-        <article class="sensor-card blue reveal-card">
-          <div class="sensor-header">
-            <div class="sensor-icon"><i data-lucide="flask-conical"></i></div>
+        <article class="summary-card blue">
+          <div class="summary-icon"><i data-lucide="flask-conical"></i></div>
+          <div>
             <span>Soil pH</span>
-          </div>
-
-          <div class="sensor-value">
-            <strong id="ph">--</strong>
-            <small>pH</small>
+            <strong><b id="dashPh">--</b><small>pH</small></strong>
           </div>
         </article>
 
-        <article class="sensor-card blue reveal-card">
-          <div class="sensor-header">
-            <div class="sensor-icon"><i data-lucide="radio-tower"></i></div>
+        <article class="summary-card orange">
+          <div class="summary-icon"><i data-lucide="thermometer"></i></div>
+          <div>
+            <span>Soil Temperature</span>
+            <strong><b id="dashTemperature">--</b><small>°C</small></strong>
+          </div>
+        </article>
+
+        <article class="summary-card purple">
+          <div class="summary-icon"><i data-lucide="radio-tower"></i></div>
+          <div>
             <span>Conductivity</span>
-          </div>
-
-          <div class="sensor-value">
-            <strong id="ec">--</strong>
-            <small>µS/cm</small>
+            <strong><b id="dashEc">--</b><small>µS/cm</small></strong>
           </div>
         </article>
+      </div>
 
-        <article class="sensor-card purple reveal-card">
-          <div class="sensor-header">
-            <div class="sensor-icon"><i data-lucide="leaf"></i></div>
-            <span>Nitrogen</span>
-          </div>
-
-          <div class="sensor-value">
-            <strong id="nitrogen">--</strong>
-            <small>N</small>
-          </div>
-        </article>
-
-        <article class="sensor-card purple reveal-card">
-          <div class="sensor-header">
-            <div class="sensor-icon"><i data-lucide="flower-2"></i></div>
-            <span>Phosphorus</span>
-          </div>
-
-          <div class="sensor-value">
-            <strong id="phosphorus">--</strong>
-            <small>P</small>
-          </div>
-        </article>
-
-        <article class="sensor-card purple reveal-card">
-          <div class="sensor-header">
-            <div class="sensor-icon"><i data-lucide="hexagon"></i></div>
-            <span>Potassium</span>
-          </div>
-
-          <div class="sensor-value">
-            <strong id="potassium">--</strong>
-            <small>K</small>
-          </div>
-        </article>
-
-        <article class="sensor-card cyan reveal-card">
-          <div class="sensor-header">
-            <div class="sensor-icon"><i data-lucide="waves"></i></div>
-            <span>Salinity</span>
-          </div>
-
-          <div class="sensor-value">
-            <strong id="salinity">--</strong>
-            <small>S</small>
-          </div>
-        </article>
-      </section>
-
-      <section class="dashboard-grid">
-        <article class="panel live-panel reveal-panel">
-          <div class="panel-header">
+      <div class="dashboard-lower">
+        <article class="panel overview-panel">
+          <div class="panel-heading">
             <div>
-              <span class="panel-label">REAL-TIME MONITORING</span>
-              <h2>Live Soil Data</h2>
+              <span class="eyebrow">CURRENT OVERVIEW</span>
+              <h3>Soil condition</h3>
+            </div>
+            <span id="dashHealthBadge" class="status-pill neutral">Waiting</span>
+          </div>
+
+          <div class="overview-content">
+            <div class="mini-health-ring" id="dashHealthRing">
+              <div>
+                <strong id="dashHealthScore">--</strong>
+                <span>/100</span>
+              </div>
             </div>
 
-            <div class="live-badge">
-              <span></span>
-              LIVE
+            <div class="overview-text">
+              <h4 id="dashHealthTitle">Collecting soil data</h4>
+              <p id="dashHealthText">
+                AgroSentra is waiting for enough live readings to evaluate the current condition.
+              </p>
+
+              <div class="overview-meta">
+                <span><i data-lucide="wifi"></i><b id="dashRssi">--</b></span>
+                <span><i data-lucide="clock-3"></i><b id="dashUptime">--</b></span>
+              </div>
+            </div>
+          </div>
+        </article>
+
+        <article class="panel quick-access-panel">
+          <div class="panel-heading">
+            <div>
+              <span class="eyebrow">EXPLORE</span>
+              <h3>More from AgroSentra</h3>
             </div>
           </div>
 
-          <div class="chart-wrapper">
+          <div class="quick-access-grid">
+            <button class="quick-link analytics-link" data-jump="analytics">
+              <i data-lucide="sparkles"></i>
+              <div>
+                <strong>AI Analytics</strong>
+                <span>Trends, anomalies and interpretation</span>
+              </div>
+              <i data-lucide="arrow-up-right"></i>
+            </button>
+
+            <button class="quick-link weather-link" data-jump="weather">
+              <i data-lucide="cloud-sun"></i>
+              <div>
+                <strong>External Weather</strong>
+                <span>Rainfall and environmental context</span>
+              </div>
+              <i data-lucide="arrow-up-right"></i>
+            </button>
+
+            <button class="quick-link device-link" data-jump="device">
+              <i data-lucide="cpu"></i>
+              <div>
+                <strong>Device Info</strong>
+                <span>AgroSentra001 hardware overview</span>
+              </div>
+              <i data-lucide="arrow-up-right"></i>
+            </button>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <!-- ===================================================
+         LIVE SOIL DATA
+    ==================================================== -->
+    <section class="view" id="view-live">
+      <div class="section-intro">
+        <div>
+          <span class="eyebrow">REAL-TIME MEASUREMENTS</span>
+          <h2>Live Soil Data</h2>
+          <p>All current probe and power-monitoring values update directly from Firebase.</p>
+        </div>
+
+        <div class="live-badge"><span></span> LIVE</div>
+      </div>
+
+      <div class="live-layout">
+        <article class="panel live-chart-panel">
+          <div class="panel-heading">
+            <div>
+              <span class="eyebrow">LIVE TREND</span>
+              <h3>Soil response graph</h3>
+            </div>
+            <span class="muted-pill">Latest 40 updates</span>
+          </div>
+
+          <div class="chart-wrap">
             <canvas id="sensorChart"></canvas>
           </div>
         </article>
 
-        <article class="panel health-panel reveal-panel">
-          <div class="panel-header">
+        <div class="live-primary-cards">
+          <article class="live-focus-card green">
+            <div><i data-lucide="droplets"></i><span>Moisture</span></div>
+            <strong id="moisture">--</strong>
+            <small>%</small>
+          </article>
+
+          <article class="live-focus-card blue">
+            <div><i data-lucide="flask-conical"></i><span>pH</span></div>
+            <strong id="ph">--</strong>
+            <small>pH</small>
+          </article>
+
+          <article class="live-focus-card orange">
+            <div><i data-lucide="thermometer"></i><span>Temperature</span></div>
+            <strong id="temperature">--</strong>
+            <small>°C</small>
+          </article>
+
+          <article class="live-focus-card cyan">
+            <div><i data-lucide="radio-tower"></i><span>EC</span></div>
+            <strong id="ec">--</strong>
+            <small>µS/cm</small>
+          </article>
+        </div>
+      </div>
+
+      <div class="secondary-readings">
+        <article class="reading-card">
+          <span>Voltage</span>
+          <strong id="voltage">--</strong>
+          <small>V</small>
+        </article>
+
+        <article class="reading-card">
+          <span>Current</span>
+          <strong id="current">--</strong>
+          <small>mA</small>
+        </article>
+
+        <article class="reading-card nutrient">
+          <span>Nitrogen</span>
+          <strong id="nitrogen">--</strong>
+          <small>N</small>
+        </article>
+
+        <article class="reading-card nutrient">
+          <span>Phosphorus</span>
+          <strong id="phosphorus">--</strong>
+          <small>P</small>
+        </article>
+
+        <article class="reading-card nutrient">
+          <span>Potassium</span>
+          <strong id="potassium">--</strong>
+          <small>K</small>
+        </article>
+
+        <article class="reading-card">
+          <span>Salinity</span>
+          <strong id="salinity">--</strong>
+          <small>sensor units</small>
+        </article>
+      </div>
+    </section>
+
+    <!-- ===================================================
+         HISTORY
+    ==================================================== -->
+    <section class="view" id="view-history">
+      <div class="section-intro">
+        <div>
+          <span class="eyebrow">RECORDED DATA</span>
+          <h2>History</h2>
+          <p>Review recent Firebase history and export the recorded soil dataset as CSV.</p>
+        </div>
+
+        <button class="primary-action" id="downloadHistoryButton">
+          <i data-lucide="download"></i>
+          Download CSV
+        </button>
+      </div>
+
+      <div class="history-stat-grid">
+        <article class="history-stat">
+          <span>Samples loaded</span>
+          <strong id="historyCount">0</strong>
+        </article>
+
+        <article class="history-stat">
+          <span>Coverage</span>
+          <strong id="historyCoverageCard">--</strong>
+        </article>
+
+        <article class="history-stat">
+          <span>Avg. moisture</span>
+          <strong id="historyAvgMoisture">--</strong>
+        </article>
+
+        <article class="history-stat">
+          <span>Avg. pH</span>
+          <strong id="historyAvgPh">--</strong>
+        </article>
+      </div>
+
+      <article class="panel history-chart-panel">
+        <div class="panel-heading">
+          <div>
+            <span class="eyebrow">HISTORICAL TREND</span>
+            <h3>Recorded soil history</h3>
+          </div>
+
+          <select id="historyChartRange" class="ui-select">
+            <option value="60">Last hour</option>
+            <option value="360">Last 6 hours</option>
+            <option value="1440" selected>Last 24 hours</option>
+          </select>
+        </div>
+
+        <div class="chart-wrap history-chart-wrap">
+          <canvas id="historyChart"></canvas>
+        </div>
+      </article>
+
+      <article class="panel history-table-panel">
+        <div class="panel-heading">
+          <div>
+            <span class="eyebrow">RECENT RECORDS</span>
+            <h3>History table</h3>
+          </div>
+          <span class="muted-pill">Newest first</span>
+        </div>
+
+        <div class="table-scroll">
+          <table>
+            <thead>
+              <tr>
+                <th>Date / Time</th>
+                <th>Temp °C</th>
+                <th>Moisture %</th>
+                <th>pH</th>
+                <th>EC</th>
+                <th>N</th>
+                <th>P</th>
+                <th>K</th>
+                <th>Salinity</th>
+              </tr>
+            </thead>
+            <tbody id="historyTableBody">
+              <tr>
+                <td colspan="9" class="empty-row">Waiting for Firebase history...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <!-- ===================================================
+         AI ANALYTICS
+    ==================================================== -->
+    <section class="view" id="view-analytics">
+      <div class="section-intro">
+        <div>
+          <span class="eyebrow">LOCAL INTELLIGENT ANALYTICS</span>
+          <h2>AI Analytics</h2>
+          <p>Trend, baseline and anomaly interpretation generated from live and historical soil measurements.</p>
+        </div>
+
+        <select id="analyticsWindow" class="ui-select">
+          <option value="10">Last 10 minutes</option>
+          <option value="60" selected>Last 1 hour</option>
+          <option value="1440">Last 24 hours</option>
+        </select>
+      </div>
+
+      <div class="analytics-layout">
+        <article class="panel analytics-score-panel">
+          <span class="eyebrow">SOIL STABILITY</span>
+
+          <div class="analytics-ring" id="analyticsScoreRing">
             <div>
-              <span class="panel-label">SOIL ANALYSIS</span>
-              <h2>Soil Health</h2>
+              <strong id="analyticsScore">--</strong>
+              <span>/100</span>
             </div>
           </div>
 
-          <div id="healthRing" class="health-ring">
-            <div class="health-ring-inner">
-              <i data-lucide="sprout"></i>
-              <strong id="healthScore">--</strong>
-              <small>HEALTH SCORE</small>
+          <span class="status-pill neutral" id="analysisStatus">Waiting</span>
+          <p id="analysisStatusSub">Collecting historical samples for baseline analysis.</p>
+        </article>
+
+        <article class="panel insight-panel">
+          <div class="panel-heading">
+            <div>
+              <span class="eyebrow">AGROSENTRA INSIGHT</span>
+              <h3>Current interpretation</h3>
             </div>
+            <span class="muted-pill" id="insightConfidence">Baseline: --</span>
           </div>
 
-          <div id="healthBadge" class="health-badge">Waiting</div>
-
-          <p id="healthMessage">
-            Waiting for live soil readings.
+          <p class="insight-copy" id="analyticsInsight">
+            Waiting for live and historical soil readings.
           </p>
-        </article>
-      </section>
 
-      <section class="info-grid">
-        <article class="panel reveal-panel">
-          <div class="panel-header">
+          <div class="insight-chip-row" id="insightFlags">
+            <span class="insight-chip neutral">Collecting data</span>
+          </div>
+        </article>
+      </div>
+
+      <div class="analytics-metric-grid">
+        <article class="analytics-metric-card">
+          <div><span>Moisture Trend</span><i data-lucide="droplets"></i></div>
+          <strong id="moistureTrend">--</strong>
+          <small id="moistureTrendDetail">Waiting for history</small>
+        </article>
+
+        <article class="analytics-metric-card">
+          <div><span>pH Trend</span><i data-lucide="flask-conical"></i></div>
+          <strong id="phTrend">--</strong>
+          <small id="phTrendDetail">Waiting for history</small>
+        </article>
+
+        <article class="analytics-metric-card">
+          <div><span>Nutrient Balance</span><i data-lucide="leaf"></i></div>
+          <strong id="nutrientBalance">--</strong>
+          <small id="nutrientBalanceDetail">N / P / K comparison</small>
+        </article>
+
+        <article class="analytics-metric-card">
+          <div><span>Salinity Risk</span><i data-lucide="waves"></i></div>
+          <strong id="salinityRisk">--</strong>
+          <small id="salinityRiskDetail">Waiting for reading</small>
+        </article>
+
+        <article class="analytics-metric-card">
+          <div><span>Anomaly Detection</span><i data-lucide="scan-search"></i></div>
+          <strong id="anomalyState">--</strong>
+          <small id="anomalyDetail">Building baseline</small>
+        </article>
+
+        <article class="analytics-metric-card">
+          <div><span>History Samples</span><i data-lucide="database"></i></div>
+          <strong id="historySampleCount">0</strong>
+          <small id="historyCoverage">No history yet</small>
+        </article>
+      </div>
+
+      <div class="analytics-note">
+        These analytics are browser-side decision-support indicators based on measured values and recent statistical patterns.
+        They are not a replacement for laboratory soil analysis.
+      </div>
+    </section>
+
+    <!-- ===================================================
+         EXTERNAL WEATHER
+    ==================================================== -->
+    <section class="view" id="view-weather">
+      <div class="section-intro">
+        <div>
+          <span class="eyebrow">ENVIRONMENTAL CONTEXT</span>
+          <h2>External Weather</h2>
+          <p>Open-Meteo environmental data provides context for interpreting changes measured by AgroSentra001.</p>
+        </div>
+
+        <span class="context-sync" id="contextSyncBadge">
+          <span></span>
+          Syncing
+        </span>
+      </div>
+
+      <article class="weather-location-card">
+        <div>
+          <i data-lucide="map-pin"></i>
+          <div>
+            <span>Monitoring location</span>
+            <strong id="monitoringLocation">The Waterfront Hotel, Kuching</strong>
+            <small id="contextCoordinates">1.56000, 110.34500</small>
+          </div>
+        </div>
+
+        <div class="weather-location-actions">
+          <span id="contextUpdated">Waiting for external data</span>
+          <button class="secondary-action" data-jump="settings">
+            <i data-lucide="settings-2"></i>
+            Change location
+          </button>
+        </div>
+      </article>
+
+      <div class="weather-grid">
+        <article class="weather-card">
+          <i data-lucide="cloud-rain"></i>
+          <span>Recent Rainfall</span>
+          <strong><b id="rainfall6h">--</b><small>mm / 6h</small></strong>
+          <p id="rainfallInterpretation">Waiting for external data</p>
+        </article>
+
+        <article class="weather-card">
+          <i data-lucide="thermometer-sun"></i>
+          <span>Air Temperature</span>
+          <strong><b id="externalAirTemperature">--</b><small>°C</small></strong>
+          <p>Near-surface weather-model temperature</p>
+        </article>
+
+        <article class="weather-card">
+          <i data-lucide="cloudy"></i>
+          <span>Relative Humidity</span>
+          <strong><b id="externalHumidity">--</b><small>%</small></strong>
+          <p id="humidityInterpretation">Atmospheric moisture context</p>
+        </article>
+
+        <article class="weather-card">
+          <i data-lucide="layers-3"></i>
+          <span>Model Soil Temperature</span>
+          <strong><b id="modelSoilTemperature">--</b><small>°C</small></strong>
+          <p>Near-surface model reference</p>
+        </article>
+
+        <article class="weather-card">
+          <i data-lucide="waves"></i>
+          <span>Model Soil Moisture</span>
+          <strong><b id="modelSoilMoisture">--</b><small>vol.%</small></strong>
+          <p>Modelled volumetric moisture at 0–1 cm</p>
+        </article>
+
+        <article class="weather-card">
+          <i data-lucide="radar"></i>
+          <span>Weather Context</span>
+          <strong class="weather-state" id="weatherContextState">Waiting</strong>
+          <p id="weatherContextDetail">External data is syncing.</p>
+        </article>
+      </div>
+
+      <article class="panel comparison-panel">
+        <div class="panel-heading">
+          <div>
+            <span class="eyebrow">CROSS-SOURCE COMPARISON</span>
+            <h3>Probe vs environmental context</h3>
+          </div>
+          <span class="muted-pill">Source: Open-Meteo</span>
+        </div>
+
+        <div class="comparison-grid">
+          <div class="comparison-box">
+            <span>Moisture response</span>
+            <strong id="moistureWeatherRelation">Waiting for data</strong>
+            <p id="moistureWeatherRelationDetail">Probe and rainfall data will be compared here.</p>
+          </div>
+
+          <div class="comparison-box">
+            <span>Temperature relation</span>
+            <strong id="temperatureRelation">Waiting for data</strong>
+            <p id="temperatureRelationDetail">Probe and model temperature will be compared here.</p>
+          </div>
+
+          <div class="comparison-box">
+            <span>Context confidence</span>
+            <strong id="environmentConfidence">--</strong>
+            <p id="environmentConfidenceDetail">Depends on successful location sync.</p>
+          </div>
+        </div>
+      </article>
+
+      <div class="weather-disclaimer">
+        External soil values are model estimates used only as environmental context. AgroSentra001 probe measurements remain the primary soil data source.
+      </div>
+    </section>
+
+    <!-- ===================================================
+         DEVICE INFO
+    ==================================================== -->
+    <section class="view" id="view-device">
+      <div class="section-intro">
+        <div>
+          <span class="eyebrow">HARDWARE MODEL</span>
+          <h2>AgroSentra001</h2>
+          <p>Prototype soil monitoring unit with local LCD display, RS485 multi-parameter probe and Firebase connectivity.</p>
+        </div>
+
+        <span class="status-pill good">Prototype Model</span>
+      </div>
+
+      <article class="device-hero-panel panel">
+        <div class="device-image-wrap">
+          <div class="device-image-glow"></div>
+          <img src="./agrosentra001-model.png" alt="AgroSentra001 soil monitoring device">
+        </div>
+
+        <div class="device-description">
+          <span class="eyebrow">SOIL MONITORING UNIT</span>
+          <h3>One unit. Multiple soil parameters.</h3>
+          <p>
+            AgroSentra001 monitors soil temperature, moisture, pH, electrical conductivity,
+            nitrogen, phosphorus, potassium and salinity through an RS485 soil probe.
+            An INA219-based power-monitoring stage reports operating voltage and current,
+            while the integrated LCD provides local readings without requiring the dashboard.
+          </p>
+
+          <div class="device-feature-grid">
+            <div><i data-lucide="sprout"></i><span>Soil Parameters</span><strong>8 measured properties</strong></div>
+            <div><i data-lucide="radio-tower"></i><span>Probe Interface</span><strong>RS485 / Modbus</strong></div>
+            <div><i data-lucide="monitor"></i><span>Local Display</span><strong>16 × 2 RGB LCD</strong></div>
+            <div><i data-lucide="cloud"></i><span>Remote Data</span><strong>Firebase RTDB</strong></div>
+          </div>
+        </div>
+      </article>
+
+      <div class="device-detail-grid">
+        <article class="panel">
+          <div class="panel-heading">
             <div>
-              <span class="panel-label">HARDWARE</span>
-              <h2>Device Information</h2>
+              <span class="eyebrow">SYSTEM STATUS</span>
+              <h3>Device information</h3>
             </div>
           </div>
 
-          <div class="info-row">
-            <span>Device</span>
-            <strong>AgroSentra 001</strong>
-          </div>
-
-          <div class="info-row">
-            <span>Soil Probe</span>
-            <strong id="soilStatus">Waiting</strong>
-          </div>
-
-          <div class="info-row">
-            <span>Power Monitor</span>
-            <strong id="powerStatus">Waiting</strong>
-          </div>
-
-          <div class="info-row">
-            <span>Firebase</span>
-            <strong id="firebaseStatus">Connecting</strong>
-          </div>
-
-          <div class="info-row">
-            <span>Wi-Fi RSSI</span>
-            <strong id="rssi">--</strong>
+          <div class="detail-list">
+            <div><span>Device ID</span><strong>agrosentra-001</strong></div>
+            <div><span>Soil probe</span><strong id="soilStatus">Waiting</strong></div>
+            <div><span>Power monitor</span><strong id="powerStatus">Waiting</strong></div>
+            <div><span>Firebase</span><strong id="firebaseStatus">Connecting</strong></div>
+            <div><span>Wi-Fi RSSI</span><strong id="rssi">--</strong></div>
+            <div><span>System uptime</span><strong id="uptime">--</strong></div>
           </div>
         </article>
 
-        <article class="panel reveal-panel">
-          <div class="panel-header">
+        <article class="panel">
+          <div class="panel-heading">
             <div>
-              <span class="panel-label">CURRENT CONDITIONS</span>
-              <h2>Quick Statistics</h2>
+              <span class="eyebrow">PARAMETERS</span>
+              <h3>Measurement channels</h3>
             </div>
           </div>
 
-          <div class="info-row">
+          <div class="parameter-cloud">
             <span>Temperature</span>
-            <strong id="quickTemperature">--</strong>
-          </div>
-
-          <div class="info-row">
             <span>Moisture</span>
-            <strong id="quickMoisture">--</strong>
-          </div>
-
-          <div class="info-row">
-            <span>Soil pH</span>
-            <strong id="quickPh">--</strong>
-          </div>
-
-          <div class="info-row">
-            <span>Conductivity</span>
-            <strong id="quickEc">--</strong>
-          </div>
-
-          <div class="info-row">
-            <span>System Uptime</span>
-            <strong id="uptime">--</strong>
+            <span>pH</span>
+            <span>Electrical Conductivity</span>
+            <span>Nitrogen</span>
+            <span>Phosphorus</span>
+            <span>Potassium</span>
+            <span>Salinity</span>
+            <span>Voltage</span>
+            <span>Current</span>
           </div>
         </article>
-      </section>
+      </div>
+    </section>
 
+    <!-- ===================================================
+         SETTINGS
+    ==================================================== -->
+    <section class="view" id="view-settings">
+      <div class="section-intro">
+        <div>
+          <span class="eyebrow">PREFERENCES</span>
+          <h2>Settings</h2>
+          <p>Customize the interface and choose the environmental-context monitoring location.</p>
+        </div>
+      </div>
 
+      <div class="settings-grid">
+        <article class="panel settings-card">
+          <div class="settings-icon"><i data-lucide="palette"></i></div>
+          <div class="settings-copy">
+            <span class="eyebrow">APPEARANCE</span>
+            <h3>Dashboard theme</h3>
+            <p>Choose the visual theme used on this browser.</p>
+          </div>
 
-      <!-- ================= EXTERNAL ENVIRONMENTAL CONTEXT ================= -->
+          <div class="theme-options" id="themeOptions">
+            <button data-theme-choice="dark" class="theme-option active">
+              <span class="theme-preview dark-preview"></span>
+              <div><strong>Agro Dark</strong><small>Original dark green</small></div>
+            </button>
 
-      <section class="context-section" id="environmentContext">
-        <article class="panel context-panel reveal-panel">
+            <button data-theme-choice="midnight" class="theme-option">
+              <span class="theme-preview midnight-preview"></span>
+              <div><strong>Midnight</strong><small>Blue-black technical</small></div>
+            </button>
 
-          <div class="context-header">
-            <div>
-              <div class="context-label-row">
-                <span class="panel-label">EXTERNAL ENVIRONMENTAL CONTEXT</span>
-                <span class="context-sync-badge" id="contextSyncBadge">
-                  <span class="context-sync-dot"></span>
-                  Awaiting location
-                </span>
-              </div>
-
-              <h2>Environmental Context</h2>
-
-              <p>
-                Independent weather-model context used to interpret changes in measured soil conditions.
-              </p>
-            </div>
-
-            <button class="location-button" id="openLocationButton">
-              <i data-lucide="map-pin"></i>
-              <span id="locationButtonLabel">Change Location</span>
+            <button data-theme-choice="light" class="theme-option">
+              <span class="theme-preview light-preview"></span>
+              <div><strong>Light</strong><small>Bright clean interface</small></div>
             </button>
           </div>
-
-
-          <div class="context-location-strip">
-
-            <div class="context-location-main">
-              <div class="context-location-icon">
-                <i data-lucide="navigation"></i>
-              </div>
-
-              <div>
-                <span>Monitoring location</span>
-                <strong id="monitoringLocation">Not configured</strong>
-              </div>
-            </div>
-
-            <div class="context-location-meta">
-              <span id="contextCoordinates">--</span>
-              <span class="dot-divider">•</span>
-              <span id="contextUpdated">No external data</span>
-            </div>
-
-          </div>
-
-
-          <div class="context-grid">
-
-            <article class="context-card rain-card">
-              <div class="context-card-top">
-                <span>Recent Rainfall</span>
-                <i data-lucide="cloud-rain"></i>
-              </div>
-
-              <div class="context-value-row">
-                <strong id="rainfall6h">--</strong>
-                <span>mm / 6h</span>
-              </div>
-
-              <small id="rainfallInterpretation">
-                Waiting for location
-              </small>
-            </article>
-
-
-            <article class="context-card">
-              <div class="context-card-top">
-                <span>Air Temperature</span>
-                <i data-lucide="thermometer-sun"></i>
-              </div>
-
-              <div class="context-value-row">
-                <strong id="externalAirTemperature">--</strong>
-                <span>°C</span>
-              </div>
-
-              <small>
-                Weather-model near-surface air temperature
-              </small>
-            </article>
-
-
-            <article class="context-card">
-              <div class="context-card-top">
-                <span>Relative Humidity</span>
-                <i data-lucide="cloudy"></i>
-              </div>
-
-              <div class="context-value-row">
-                <strong id="externalHumidity">--</strong>
-                <span>%</span>
-              </div>
-
-              <small id="humidityInterpretation">
-                Atmospheric moisture context
-              </small>
-            </article>
-
-
-            <article class="context-card soil-reference-card">
-              <div class="context-card-top">
-                <span>Model Soil Temperature</span>
-                <i data-lucide="layers-3"></i>
-              </div>
-
-              <div class="context-value-row">
-                <strong id="modelSoilTemperature">--</strong>
-                <span>°C</span>
-              </div>
-
-              <small>
-                Modelled soil/surface reference near 0 cm
-              </small>
-            </article>
-
-
-            <article class="context-card soil-reference-card">
-              <div class="context-card-top">
-                <span>Model Soil Moisture</span>
-                <i data-lucide="waves"></i>
-              </div>
-
-              <div class="context-value-row">
-                <strong id="modelSoilMoisture">--</strong>
-                <span>vol.%</span>
-              </div>
-
-              <small>
-                Modelled volumetric moisture at 0–1 cm
-              </small>
-            </article>
-
-
-            <article class="context-card context-state-card">
-              <div class="context-card-top">
-                <span>Weather Context</span>
-                <i data-lucide="radar"></i>
-              </div>
-
-              <strong class="context-state-value" id="weatherContextState">
-                Not available
-              </strong>
-
-              <small id="weatherContextDetail">
-                Set the monitoring location to enable external context.
-              </small>
-            </article>
-
-          </div>
-
-
-          <div class="context-comparison">
-
-            <div class="comparison-heading">
-              <div>
-                <span class="panel-label">CROSS-SOURCE COMPARISON</span>
-                <h3>Measured Soil vs Environmental Context</h3>
-              </div>
-
-              <span class="source-pill">
-                Data source: Open-Meteo
-              </span>
-            </div>
-
-
-            <div class="comparison-grid">
-
-              <div class="comparison-item">
-                <span>Moisture response</span>
-                <strong id="moistureWeatherRelation">Waiting for data</strong>
-                <small id="moistureWeatherRelationDetail">
-                  Live and external readings will be compared here.
-                </small>
-              </div>
-
-              <div class="comparison-item">
-                <span>Temperature relation</span>
-                <strong id="temperatureRelation">Waiting for data</strong>
-                <small id="temperatureRelationDetail">
-                  Probe temperature will be compared with model context.
-                </small>
-              </div>
-
-              <div class="comparison-item">
-                <span>Context confidence</span>
-                <strong id="environmentConfidence">--</strong>
-                <small id="environmentConfidenceDetail">
-                  Depends on location and successful external-data sync.
-                </small>
-              </div>
-
-            </div>
-
-          </div>
-
-
-          <div class="context-disclaimer">
-            External soil values are weather-model estimates and are not replacements for the physical AgroSentra probe.
-            They are used only as environmental context for trend interpretation.
-          </div>
-
         </article>
-      </section>
 
-
-      <!-- ================= LOCATION MODAL ================= -->
-
-      <div class="modal-backdrop" id="locationModal" aria-hidden="true">
-
-        <div class="location-modal" role="dialog" aria-modal="true" aria-labelledby="locationModalTitle">
-
-          <div class="modal-header">
-            <div>
-              <span class="panel-label">MONITORING LOCATION</span>
-              <h2 id="locationModalTitle">Environmental Data Location</h2>
-            </div>
-
-            <button class="modal-close" id="closeLocationButton" aria-label="Close">
-              <i data-lucide="x"></i>
-            </button>
+        <article class="panel settings-card">
+          <div class="settings-icon"><i data-lucide="map-pin"></i></div>
+          <div class="settings-copy">
+            <span class="eyebrow">MONITORING LOCATION</span>
+            <h3>Environmental context location</h3>
+            <p>Used only to request Open-Meteo environmental data for the monitoring site.</p>
           </div>
 
-
-          <p class="modal-description">
-            AgroSentra uses the monitoring-site coordinates only to request environmental context.
-            The default demo location is The Waterfront Hotel, Kuching (1.560° N, 110.345° E).
-            You can override it with your current location or custom coordinates.
-          </p>
-
-          <div class="default-location-note">
-            Default: The Waterfront Hotel, Kuching · 1.560° N, 110.345° E
+          <div class="default-location-box">
+            <span>Current location</span>
+            <strong id="settingsCurrentLocation">The Waterfront Hotel, Kuching</strong>
+            <small id="settingsCurrentCoordinates">1.56000° N, 110.34500° E</small>
           </div>
 
-
-          <button class="geolocation-button" id="useCurrentLocationButton">
+          <button class="location-use-button" id="useCurrentLocationButton">
             <i data-lucide="locate-fixed"></i>
             Use this device location
           </button>
 
+          <div class="settings-divider"><span>OR ENTER COORDINATES</span></div>
 
-          <div class="location-divider">
-            <span>OR ENTER COORDINATES</span>
-          </div>
-
-
-          <div class="coordinate-grid">
-
+          <div class="settings-form-grid">
             <label>
               <span>Latitude</span>
-              <input
-                id="latitudeInput"
-                type="number"
-                step="any"
-                min="-90"
-                max="90"
-                placeholder="e.g. 1.5533"
-              >
+              <input id="latitudeInput" type="number" step="any" min="-90" max="90" value="1.560">
             </label>
 
             <label>
               <span>Longitude</span>
-              <input
-                id="longitudeInput"
-                type="number"
-                step="any"
-                min="-180"
-                max="180"
-                placeholder="e.g. 110.3592"
-              >
+              <input id="longitudeInput" type="number" step="any" min="-180" max="180" value="110.345">
             </label>
-
           </div>
 
-
-          <label class="location-name-field">
-            <span>Location label <em>optional</em></span>
-            <input
-              id="locationNameInput"
-              type="text"
-              maxlength="60"
-              placeholder="e.g. Plot A / Campus Field"
-            >
+          <label class="full-field">
+            <span>Location label</span>
+            <input id="locationNameInput" type="text" maxlength="60" value="The Waterfront Hotel, Kuching">
           </label>
 
+          <div id="locationError" class="form-error"></div>
 
-          <div class="modal-error" id="locationError"></div>
-
-
-          <div class="modal-actions">
-
-            <button class="secondary-button" id="clearLocationButton">
+          <div class="settings-actions">
+            <button class="secondary-action" id="resetLocationButton">
               Reset to Waterfront Hotel
             </button>
 
-            <button class="primary-button" id="saveLocationButton">
+            <button class="primary-action" id="saveLocationButton">
               <i data-lucide="check"></i>
-              Save & Sync Context
+              Save & sync
             </button>
-
           </div>
-
-        </div>
-
+        </article>
       </div>
+    </section>
 
+    <footer class="site-footer">
+      <span>AgroSentra001</span>
+      <span>Soil Monitoring Dashboard</span>
+    </footer>
+  </main>
+</div>
 
-      <!-- ================= INTELLIGENT SOIL ANALYTICS ================= -->
+<div class="mobile-overlay" id="mobileOverlay"></div>
 
-      <section class="analytics-section" id="analyticsSection">
-        <article class="panel analytics-panel reveal-panel">
-          <div class="panel-header analytics-heading">
-            <div>
-              <span class="panel-label">INTELLIGENT SOIL ANALYTICS</span>
-              <h2>Context-Aware Soil Analysis</h2>
-            </div>
-
-            <div class="analytics-window-control">
-              <span>Analyse</span>
-              <select id="analyticsWindow" aria-label="Analytics time window">
-                <option value="10">Last 10 minutes</option>
-                <option value="60" selected>Last 1 hour</option>
-                <option value="1440">Last 24 hours</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="analytics-grid">
-            <div class="analytics-score-card">
-              <div class="analytics-score-ring" id="analyticsScoreRing">
-                <div class="analytics-score-inner">
-                  <span class="score-kicker">SOIL STABILITY</span>
-                  <strong id="analyticsScore">--</strong>
-                  <small>/ 100</small>
-                </div>
-              </div>
-
-              <div class="analysis-status" id="analysisStatus">
-                Waiting for history
-              </div>
-
-              <p class="analysis-status-sub" id="analysisStatusSub">
-                AgroSentra is collecting enough readings to establish a baseline.
-              </p>
-            </div>
-
-            <div class="analytics-metrics">
-              <div class="analytics-metric">
-                <div class="analytics-metric-top">
-                  <span>Moisture Trend</span>
-                  <i data-lucide="droplets"></i>
-                </div>
-                <strong id="moistureTrend">--</strong>
-                <small id="moistureTrendDetail">Waiting for history</small>
-              </div>
-
-              <div class="analytics-metric">
-                <div class="analytics-metric-top">
-                  <span>pH Trend</span>
-                  <i data-lucide="flask-conical"></i>
-                </div>
-                <strong id="phTrend">--</strong>
-                <small id="phTrendDetail">Waiting for history</small>
-              </div>
-
-              <div class="analytics-metric">
-                <div class="analytics-metric-top">
-                  <span>Nutrient Balance</span>
-                  <i data-lucide="leaf"></i>
-                </div>
-                <strong id="nutrientBalance">--</strong>
-                <small id="nutrientBalanceDetail">N / P / K comparison</small>
-              </div>
-
-              <div class="analytics-metric">
-                <div class="analytics-metric-top">
-                  <span>Salinity Risk</span>
-                  <i data-lucide="waves"></i>
-                </div>
-                <strong id="salinityRisk">--</strong>
-                <small id="salinityRiskDetail">Waiting for reading</small>
-              </div>
-
-              <div class="analytics-metric">
-                <div class="analytics-metric-top">
-                  <span>Anomaly Detection</span>
-                  <i data-lucide="scan-search"></i>
-                </div>
-                <strong id="anomalyState">--</strong>
-                <small id="anomalyDetail">Building baseline</small>
-              </div>
-
-              <div class="analytics-metric">
-                <div class="analytics-metric-top">
-                  <span>History Samples</span>
-                  <i data-lucide="database"></i>
-                </div>
-                <strong id="historySampleCount">0</strong>
-                <small id="historyCoverage">No historical data yet</small>
-              </div>
-            </div>
-          </div>
-        </article>
-
-        <article class="panel insight-panel reveal-panel">
-          <div class="insight-title-row">
-            <div class="insight-icon">
-              <i data-lucide="sparkles"></i>
-            </div>
-
-            <div>
-              <span class="panel-label">AGROSENTRA INSIGHT</span>
-              <h2>Current Interpretation</h2>
-            </div>
-
-            <div class="insight-confidence" id="insightConfidence">
-              Baseline: --
-            </div>
-          </div>
-
-          <p class="insight-text" id="analyticsInsight">
-            Waiting for live and historical soil readings before generating an interpretation.
-          </p>
-
-          <div class="insight-flags" id="insightFlags">
-            <span class="insight-chip neutral">Collecting data</span>
-          </div>
-
-          <div class="analytics-note">
-            Analytics combine measured soil data, historical trends, and available environmental context.
-            They are decision-support indicators, not a replacement for laboratory soil analysis.
-          </div>
-        </article>
-      </section>
-
-      <footer class="site-footer">
-        <div class="footer-brand">AgroSentra</div>
-        <div class="footer-credit">Soil Monitoring Dashboard</div>
-      </footer>
-    </main>
-  </div>
-
-  <script type="module" src="./app.js"></script>
+<script type="module" src="./app.js"></script>
 </body>
 </html>

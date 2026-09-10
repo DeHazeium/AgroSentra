@@ -1,6 +1,4 @@
-import {
-  database
-} from "./firebase-config.js";
+import { database } from "./firebase-config.js";
 
 import {
   ref,
@@ -17,474 +15,158 @@ import {
 
 import {
   fetchEnvironmentalContext,
-  classifyRain,
   contextRelations,
   validCoordinate
 } from "./external-context.js";
 
 lucide.createIcons();
 
-
-/* =======================================
-   DOM
-======================================= */
-
-const elements = {
-  voltage: document.getElementById("voltage"),
-  current: document.getElementById("current"),
-  temperature: document.getElementById("temperature"),
-  moisture: document.getElementById("moisture"),
-  ph: document.getElementById("ph"),
-  ec: document.getElementById("ec"),
-  nitrogen: document.getElementById("nitrogen"),
-  phosphorus: document.getElementById("phosphorus"),
-  potassium: document.getElementById("potassium"),
-  salinity: document.getElementById("salinity")
-};
-
-const analyticsElements = {
-  window: document.getElementById("analyticsWindow"),
-  score: document.getElementById("analyticsScore"),
-  scoreRing: document.getElementById("analyticsScoreRing"),
-  status: document.getElementById("analysisStatus"),
-  statusSub: document.getElementById("analysisStatusSub"),
-  moistureTrend: document.getElementById("moistureTrend"),
-  moistureTrendDetail: document.getElementById("moistureTrendDetail"),
-  phTrend: document.getElementById("phTrend"),
-  phTrendDetail: document.getElementById("phTrendDetail"),
-  nutrientBalance: document.getElementById("nutrientBalance"),
-  nutrientBalanceDetail: document.getElementById("nutrientBalanceDetail"),
-  salinityRisk: document.getElementById("salinityRisk"),
-  salinityRiskDetail: document.getElementById("salinityRiskDetail"),
-  anomalyState: document.getElementById("anomalyState"),
-  anomalyDetail: document.getElementById("anomalyDetail"),
-  sampleCount: document.getElementById("historySampleCount"),
-  coverage: document.getElementById("historyCoverage"),
-  confidence: document.getElementById("insightConfidence"),
-  insight: document.getElementById("analyticsInsight"),
-
-  flags: document.getElementById("insightFlags")
-};
-
-const contextElements = {
-  syncBadge: document.getElementById("contextSyncBadge"),
-  openLocationButton: document.getElementById("openLocationButton"),
-  locationButtonLabel: document.getElementById("locationButtonLabel"),
-  monitoringLocation: document.getElementById("monitoringLocation"),
-  coordinates: document.getElementById("contextCoordinates"),
-  updated: document.getElementById("contextUpdated"),
-  rainfall6h: document.getElementById("rainfall6h"),
-  rainfallInterpretation: document.getElementById("rainfallInterpretation"),
-  airTemperature: document.getElementById("externalAirTemperature"),
-  humidity: document.getElementById("externalHumidity"),
-  humidityInterpretation: document.getElementById("humidityInterpretation"),
-  modelSoilTemperature: document.getElementById("modelSoilTemperature"),
-  modelSoilMoisture: document.getElementById("modelSoilMoisture"),
-  weatherState: document.getElementById("weatherContextState"),
-  weatherDetail: document.getElementById("weatherContextDetail"),
-  moistureRelation: document.getElementById("moistureWeatherRelation"),
-  moistureRelationDetail: document.getElementById("moistureWeatherRelationDetail"),
-  temperatureRelation: document.getElementById("temperatureRelation"),
-  temperatureRelationDetail: document.getElementById("temperatureRelationDetail"),
-  confidence: document.getElementById("environmentConfidence"),
-  confidenceDetail: document.getElementById("environmentConfidenceDetail"),
-
-  modal: document.getElementById("locationModal"),
-  closeButton: document.getElementById("closeLocationButton"),
-  currentLocationButton: document.getElementById("useCurrentLocationButton"),
-  latitudeInput: document.getElementById("latitudeInput"),
-  longitudeInput: document.getElementById("longitudeInput"),
-  locationNameInput: document.getElementById("locationNameInput"),
-  error: document.getElementById("locationError"),
-  clearButton: document.getElementById("clearLocationButton"),
-  saveButton: document.getElementById("saveLocationButton")
-};
-
-
-/* =======================================
-   HELPERS
-======================================= */
+/* =========================================================
+   BASIC HELPERS
+========================================================= */
 
 function validNumber(value) {
   return isFiniteNumber(value);
 }
 
-function format(value, decimalPlaces = 1) {
-  if (!validNumber(value)) {
-    return "--";
-  }
-
-  return Number(value).toFixed(decimalPlaces);
+function fmt(value, digits = 1) {
+  return validNumber(value) ? Number(value).toFixed(digits) : "--";
 }
 
 function formatUptime(ms) {
-  if (!validNumber(ms)) {
-    return "--";
-  }
+  if (!validNumber(ms)) return "--";
 
-  const seconds = Math.floor(Number(ms) / 1000);
-  const days = Math.floor(seconds / 86400);
-  const hours = Math.floor((seconds % 86400) / 3600);
-  const minutes = Math.floor((seconds % 3600) / 60);
+  const total = Math.floor(Number(ms) / 1000);
+  const days = Math.floor(total / 86400);
+  const hours = Math.floor((total % 86400) / 3600);
+  const minutes = Math.floor((total % 3600) / 60);
 
-  if (days > 0) {
-    return `${days}d ${hours}h`;
-  }
-
-  if (hours > 0) {
-    return `${hours}h ${minutes}m`;
-  }
-
+  if (days) return `${days}d ${hours}h`;
+  if (hours) return `${hours}h ${minutes}m`;
   return `${minutes}m`;
 }
 
-function clearStateClasses(element) {
-  element.classList.remove(
-    "trend-up",
-    "trend-down",
-    "trend-stable",
-    "state-good",
-    "state-warning",
-    "state-danger"
+function average(values) {
+  const clean = values.map(Number).filter(Number.isFinite);
+  if (!clean.length) return null;
+  return clean.reduce((a,b) => a + b, 0) / clean.length;
+}
+
+function tsMs(sample) {
+  if (!sample || !validNumber(sample.timestamp)) return null;
+  const n = Number(sample.timestamp);
+  return n > 1e12 ? n : n * 1000;
+}
+
+function clearStateClasses(el) {
+  if (!el) return;
+  el.classList.remove(
+    "trend-up","trend-down","trend-stable",
+    "state-good","state-warning","state-danger"
   );
 }
 
+/* =========================================================
+   MULTI-VIEW NAVIGATION
+========================================================= */
 
-/* =======================================
-   LIVE CHART
-======================================= */
+const viewMeta = {
+  dashboard: ["AGROSENTRA001", "Dashboard"],
+  live: ["REAL-TIME MONITORING", "Live Soil Data"],
+  history: ["RECORDED MEASUREMENTS", "History"],
+  analytics: ["LOCAL INTELLIGENT ANALYTICS", "AI Analytics"],
+  weather: ["ENVIRONMENTAL CONTEXT", "External Weather"],
+  device: ["HARDWARE MODEL", "Device Info"],
+  settings: ["PREFERENCES", "Settings"]
+};
 
-const chartCanvas =
-  document.getElementById("sensorChart");
+const navItems = [...document.querySelectorAll("[data-view]")];
+const views = [...document.querySelectorAll(".view")];
+const pageEyebrow = document.getElementById("pageEyebrow");
+const pageTitle = document.getElementById("pageTitle");
 
-const sensorChart =
-  new Chart(chartCanvas, {
-    type: "line",
+function switchView(name, updateHash = true) {
+  if (!viewMeta[name]) name = "dashboard";
 
-    data: {
-      labels: [],
-
-      datasets: [
-        {
-          label: "Temperature °C",
-          data: [],
-          borderColor: "#46f28b",
-          backgroundColor: "#46f28b",
-          borderWidth: 2,
-          pointRadius: 0,
-          tension: 0.35
-        },
-        {
-          label: "Moisture %",
-          data: [],
-          borderColor: "#328cff",
-          backgroundColor: "#328cff",
-          borderWidth: 2,
-          pointRadius: 0,
-          tension: 0.35
-        },
-        {
-          label: "pH",
-          data: [],
-          borderColor: "#a75cff",
-          backgroundColor: "#a75cff",
-          borderWidth: 2,
-          pointRadius: 0,
-          tension: 0.35
-        }
-      ]
-    },
-
-    options: {
-      responsive: true,
-      maintainAspectRatio: false,
-
-      animation: {
-        duration: 250
-      },
-
-      interaction: {
-        intersect: false,
-        mode: "index"
-      },
-
-      plugins: {
-        legend: {
-          position: "bottom",
-
-          labels: {
-            color: "#788995",
-            usePointStyle: true,
-            boxWidth: 7,
-            padding: 18,
-
-            font: {
-              size: 10
-            }
-          }
-        }
-      },
-
-      scales: {
-        x: {
-          ticks: {
-            color: "#536571",
-            maxTicksLimit: 7,
-
-            font: {
-              size: 9
-            }
-          },
-
-          grid: {
-            color: "rgba(255,255,255,.035)"
-          },
-
-          border: {
-            color: "rgba(255,255,255,.06)"
-          }
-        },
-
-        y: {
-          ticks: {
-            color: "#536571",
-
-            font: {
-              size: 9
-            }
-          },
-
-          grid: {
-            color: "rgba(255,255,255,.035)"
-          },
-
-          border: {
-            color: "rgba(255,255,255,.06)"
-          }
-        }
-      }
-    }
+  navItems.forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.view === name);
   });
 
-let lastChartTimestamp = null;
+  views.forEach(view => {
+    view.classList.toggle("active", view.id === `view-${name}`);
+  });
 
-function addChartReading(data) {
-  if (
-    !validNumber(data.temperature) ||
-    !validNumber(data.moisture) ||
-    !validNumber(data.ph)
-  ) {
-    return;
+  pageEyebrow.textContent = viewMeta[name][0];
+  pageTitle.textContent = viewMeta[name][1];
+
+  if (updateHash) {
+    history.replaceState(null, "", `#${name}`);
   }
 
-  const updateKey =
-    validNumber(data.timestamp)
-      ? Number(data.timestamp)
-      : Date.now();
+  document.body.classList.remove("menu-open");
+  window.scrollTo({ top: 0, behavior: "smooth" });
 
-  // Prevent the same Firebase snapshot being plotted more than once.
-  if (updateKey === lastChartTimestamp) {
-    return;
-  }
-
-  lastChartTimestamp = updateKey;
-
-  const label =
-    new Date().toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit",
-      second: "2-digit"
-    });
-
-  sensorChart.data.labels.push(label);
-  sensorChart.data.datasets[0].data.push(Number(data.temperature));
-  sensorChart.data.datasets[1].data.push(Number(data.moisture));
-  sensorChart.data.datasets[2].data.push(Number(data.ph));
-
-  const maxPoints = 40;
-
-  while (sensorChart.data.labels.length > maxPoints) {
-    sensorChart.data.labels.shift();
-
-    sensorChart.data.datasets.forEach(dataset => {
-      dataset.data.shift();
-    });
-  }
-
-  sensorChart.update("none");
+  // Chart.js may need a resize after a hidden view becomes visible.
+  setTimeout(() => {
+    if (name === "live") sensorChart.resize();
+    if (name === "history") historyChart.resize();
+  }, 80);
 }
 
+navItems.forEach(btn => {
+  btn.addEventListener("click", () => switchView(btn.dataset.view));
+});
 
-/* =======================================
-   LIVE VALUES
-======================================= */
+document.querySelectorAll("[data-jump]").forEach(btn => {
+  btn.addEventListener("click", () => switchView(btn.dataset.jump));
+});
 
-function updateSensorValues(data) {
-  elements.voltage.textContent =
-    format(data.voltage, 2);
+const initialView = location.hash.replace("#","") || "dashboard";
+switchView(initialView, false);
 
-  elements.current.textContent =
-    format(data.current, 1);
+document.getElementById("mobileMenuButton").addEventListener("click", () => {
+  document.body.classList.toggle("menu-open");
+});
 
-  elements.temperature.textContent =
-    format(data.temperature, 1);
+document.getElementById("mobileOverlay").addEventListener("click", () => {
+  document.body.classList.remove("menu-open");
+});
 
-  elements.moisture.textContent =
-    format(data.moisture, 1);
+/* =========================================================
+   THEME
+========================================================= */
 
-  elements.ph.textContent =
-    format(data.ph, 1);
+const THEME_KEY = "agrosentra-theme-v2";
 
-  elements.ec.textContent =
-    format(data.ec, 0);
+function applyTheme(theme) {
+  if (!["dark","midnight","light"].includes(theme)) theme = "dark";
 
-  elements.nitrogen.textContent =
-    format(data.nitrogen, 0);
+  document.body.dataset.theme = theme;
+  localStorage.setItem(THEME_KEY, theme);
 
-  elements.phosphorus.textContent =
-    format(data.phosphorus, 0);
-
-  elements.potassium.textContent =
-    format(data.potassium, 0);
-
-  elements.salinity.textContent =
-    format(data.salinity, 0);
-
-  document.getElementById("quickTemperature").textContent =
-    `${format(data.temperature, 1)} °C`;
-
-  document.getElementById("quickMoisture").textContent =
-    `${format(data.moisture, 1)} %`;
-
-  document.getElementById("quickPh").textContent =
-    format(data.ph, 1);
-
-  document.getElementById("quickEc").textContent =
-    `${format(data.ec, 0)} µS/cm`;
-
-  document.getElementById("rssi").textContent =
-    validNumber(data.rssi)
-      ? `${data.rssi} dBm`
-      : "--";
-
-  document.getElementById("uptime").textContent =
-    formatUptime(data.uptime_ms);
+  document.querySelectorAll("[data-theme-choice]").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.themeChoice === theme);
+  });
 }
 
+document.querySelectorAll("[data-theme-choice]").forEach(btn => {
+  btn.addEventListener("click", () => applyTheme(btn.dataset.themeChoice));
+});
 
-/* =======================================
-   HARDWARE STATUS
-======================================= */
+applyTheme(localStorage.getItem(THEME_KEY) || "dark");
 
-function updateHardwareStatus(data) {
-  const soil =
-    document.getElementById("soilStatus");
-
-  const power =
-    document.getElementById("powerStatus");
-
-  soil.textContent =
-    data.soil_ok === false
-      ? "Probe Error"
-      : "Online";
-
-  power.textContent =
-    data.power_ok === false
-      ? "INA219 Error"
-      : "Online";
-}
-
-
-/* =======================================
-   SIMPLE LIVE HEALTH INDICATOR
-======================================= */
-
-function calculateHealth(data) {
-  let score = 100;
-
-  const moisture = Number(data.moisture);
-  const ph = Number(data.ph);
-  const temperature = Number(data.temperature);
-  const ec = Number(data.ec);
-
-  if (validNumber(moisture)) {
-    if (moisture < 30 || moisture > 80) {
-      score -= 20;
-    }
-  }
-
-  if (validNumber(ph)) {
-    if (ph < 5.5 || ph > 7.5) {
-      score -= 25;
-    }
-  }
-
-  if (validNumber(temperature)) {
-    if (temperature < 15 || temperature > 35) {
-      score -= 15;
-    }
-  }
-
-  if (validNumber(ec)) {
-    if (ec > 2000) {
-      score -= 15;
-    }
-  }
-
-  return Math.max(0, Math.min(100, score));
-}
-
-function updateHealth(data) {
-  const score = calculateHealth(data);
-
-  const scoreElement =
-    document.getElementById("healthScore");
-
-  const badge =
-    document.getElementById("healthBadge");
-
-  const message =
-    document.getElementById("healthMessage");
-
-  const ring =
-    document.getElementById("healthRing");
-
-  scoreElement.textContent = score;
-
-  ring.style.background =
-    `conic-gradient(
-      #46f28b ${score}%,
-      rgba(255,255,255,.05) ${score}%
-    )`;
-
-  if (score >= 80) {
-    badge.textContent = "Healthy";
-    message.textContent =
-      "Current monitored soil conditions are within the preferred prototype range.";
-  } else if (score >= 60) {
-    badge.textContent = "Attention";
-    message.textContent =
-      "Some monitored soil parameters are outside the preferred prototype range.";
-  } else {
-    badge.textContent = "Warning";
-    message.textContent =
-      "Multiple monitored soil parameters require attention.";
-  }
-}
-
-
-/* =======================================
-   STAGE 1 + STAGE 2 ANALYTICS
-======================================= */
+/* =========================================================
+   STATE
+========================================================= */
 
 let currentLiveData = null;
 let historicalSamples = [];
-
 let environmentalContext = null;
 let monitoringLocation = null;
+let lastFirebaseUpdate = 0;
 let externalRefreshTimer = null;
 
-const LOCATION_STORAGE_KEY = "agrosentra-monitoring-location-v1";
+const LOCATION_KEY = "agrosentra-monitoring-location-v2";
 const EXTERNAL_REFRESH_MS = 10 * 60 * 1000;
 
 const DEFAULT_LOCATION = {
@@ -494,293 +176,567 @@ const DEFAULT_LOCATION = {
   source: "default"
 };
 
-function historyCoverageText(samples) {
-  if (!samples.length) {
-    return "No historical data yet";
+/* =========================================================
+   LIVE CHART
+========================================================= */
+
+const sensorChart = new Chart(
+  document.getElementById("sensorChart"),
+  {
+    type: "line",
+    data: {
+      labels: [],
+      datasets: [
+        {
+          label: "Temperature °C",
+          data: [],
+          borderColor: "#45f28b",
+          backgroundColor: "#45f28b",
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: .36
+        },
+        {
+          label: "Moisture %",
+          data: [],
+          borderColor: "#45a7ff",
+          backgroundColor: "#45a7ff",
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: .36
+        },
+        {
+          label: "pH",
+          data: [],
+          borderColor: "#a874ff",
+          backgroundColor: "#a874ff",
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: .36
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 220 },
+      interaction: { intersect: false, mode: "index" },
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: {
+            usePointStyle: true,
+            boxWidth: 7,
+            padding: 17,
+            color: "#718692",
+            font: { size: 9 }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: "rgba(127,146,158,.08)" },
+          ticks: { color: "#647985", maxTicksLimit: 7, font: { size: 8 } }
+        },
+        y: {
+          grid: { color: "rgba(127,146,158,.08)" },
+          ticks: { color: "#647985", font: { size: 8 } }
+        }
+      }
+    }
+  }
+);
+
+let lastLiveChartTimestamp = null;
+
+function addLiveChartReading(data) {
+  if (
+    !validNumber(data.temperature) ||
+    !validNumber(data.moisture) ||
+    !validNumber(data.ph)
+  ) return;
+
+  const key = validNumber(data.timestamp) ? Number(data.timestamp) : Date.now();
+
+  if (key === lastLiveChartTimestamp) return;
+  lastLiveChartTimestamp = key;
+
+  sensorChart.data.labels.push(
+    new Date().toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit"
+    })
+  );
+
+  sensorChart.data.datasets[0].data.push(Number(data.temperature));
+  sensorChart.data.datasets[1].data.push(Number(data.moisture));
+  sensorChart.data.datasets[2].data.push(Number(data.ph));
+
+  while (sensorChart.data.labels.length > 40) {
+    sensorChart.data.labels.shift();
+    sensorChart.data.datasets.forEach(ds => ds.data.shift());
   }
 
-  const timestamps =
-    samples
-      .map(sample => Number(sample.timestamp))
-      .filter(Number.isFinite)
-      .sort((a, b) => a - b);
-
-  if (timestamps.length < 2) {
-    return "1 historical sample available";
-  }
-
-  const seconds =
-    timestamps[timestamps.length - 1] -
-    timestamps[0];
-
-  const minutes =
-    Math.max(0, Math.round(seconds / 60));
-
-  if (minutes >= 1440) {
-    return `${(minutes / 1440).toFixed(1)} days of data`;
-  }
-
-  if (minutes >= 60) {
-    return `${(minutes / 60).toFixed(1)} hours of data`;
-  }
-
-  return `${minutes} minutes of data`;
+  sensorChart.update("none");
 }
 
-function applyTrendDisplay(
-  valueElement,
-  detailElement,
-  trendDisplay
-) {
-  clearStateClasses(valueElement);
+/* =========================================================
+   HISTORY CHART
+========================================================= */
 
-  valueElement.textContent =
-    trendDisplay.label;
+const historyChart = new Chart(
+  document.getElementById("historyChart"),
+  {
+    type: "line",
+    data: {
+      labels: [],
+      datasets: [
+        {
+          label: "Moisture %",
+          data: [],
+          borderColor: "#45a7ff",
+          backgroundColor: "#45a7ff",
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: .3
+        },
+        {
+          label: "Temperature °C",
+          data: [],
+          borderColor: "#45f28b",
+          backgroundColor: "#45f28b",
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: .3
+        },
+        {
+          label: "pH",
+          data: [],
+          borderColor: "#a874ff",
+          backgroundColor: "#a874ff",
+          borderWidth: 2,
+          pointRadius: 0,
+          tension: .3
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      animation: { duration: 180 },
+      interaction: { intersect: false, mode: "index" },
+      plugins: {
+        legend: {
+          position: "bottom",
+          labels: {
+            usePointStyle: true,
+            boxWidth: 7,
+            padding: 17,
+            color: "#718692",
+            font: { size: 9 }
+          }
+        }
+      },
+      scales: {
+        x: {
+          grid: { color: "rgba(127,146,158,.08)" },
+          ticks: { color: "#647985", maxTicksLimit: 8, font: { size: 8 } }
+        },
+        y: {
+          grid: { color: "rgba(127,146,158,.08)" },
+          ticks: { color: "#647985", font: { size: 8 } }
+        }
+      }
+    }
+  }
+);
 
-  detailElement.textContent =
-    trendDisplay.detail;
+document.getElementById("historyChartRange").addEventListener("change", renderHistory);
 
-  if (trendDisplay.className) {
-    valueElement.classList.add(
-      trendDisplay.className
-    );
+/* =========================================================
+   LIVE VALUES / DASHBOARD
+========================================================= */
+
+const liveIds = {
+  voltage: ["voltage", 2],
+  current: ["current", 1],
+  temperature: ["temperature", 1],
+  moisture: ["moisture", 1],
+  ph: ["ph", 1],
+  ec: ["ec", 0],
+  nitrogen: ["nitrogen", 0],
+  phosphorus: ["phosphorus", 0],
+  potassium: ["potassium", 0],
+  salinity: ["salinity", 0]
+};
+
+function updateLiveValues(data) {
+  for (const [field, [id, digits]] of Object.entries(liveIds)) {
+    const el = document.getElementById(id);
+    if (el) el.textContent = fmt(data[field], digits);
+  }
+
+  document.getElementById("dashMoisture").textContent = fmt(data.moisture, 1);
+  document.getElementById("dashPh").textContent = fmt(data.ph, 1);
+  document.getElementById("dashTemperature").textContent = fmt(data.temperature, 1);
+  document.getElementById("dashEc").textContent = fmt(data.ec, 0);
+
+  const rssi = validNumber(data.rssi) ? `${data.rssi} dBm` : "--";
+  const uptime = formatUptime(data.uptime_ms);
+
+  document.getElementById("rssi").textContent = rssi;
+  document.getElementById("uptime").textContent = uptime;
+  document.getElementById("dashRssi").textContent = rssi;
+  document.getElementById("dashUptime").textContent = uptime;
+
+  document.getElementById("soilStatus").textContent =
+    data.soil_ok === false ? "Probe Error" : "Online";
+
+  document.getElementById("powerStatus").textContent =
+    data.power_ok === false ? "INA219 Error" : "Online";
+
+  document.getElementById("firebaseStatus").textContent = "Connected";
+}
+
+function liveHealthScore(data) {
+  let score = 100;
+
+  const m = Number(data.moisture);
+  const p = Number(data.ph);
+  const t = Number(data.temperature);
+  const ec = Number(data.ec);
+
+  if (Number.isFinite(m) && (m < 30 || m > 80)) score -= 20;
+  if (Number.isFinite(p) && (p < 5.5 || p > 7.5)) score -= 25;
+  if (Number.isFinite(t) && (t < 15 || t > 35)) score -= 15;
+  if (Number.isFinite(ec) && ec > 2000) score -= 15;
+
+  return Math.max(0, Math.min(100, score));
+}
+
+function updateDashboardCondition(data) {
+  const score = liveHealthScore(data);
+  const ring = document.getElementById("dashHealthRing");
+  const badge = document.getElementById("dashHealthBadge");
+  const title = document.getElementById("dashHealthTitle");
+  const text = document.getElementById("dashHealthText");
+
+  document.getElementById("dashHealthScore").textContent = score;
+
+  ring.style.background =
+    `conic-gradient(var(--green) ${score}%, rgba(127,146,158,.13) ${score}%)`;
+
+  badge.className = "status-pill";
+
+  if (score >= 80) {
+    badge.classList.add("good");
+    badge.textContent = "Healthy";
+    title.textContent = "Current readings look stable";
+    text.textContent =
+      "The current monitored soil values are within the prototype preferred ranges.";
+  } else if (score >= 60) {
+    badge.classList.add("warning");
+    badge.textContent = "Attention";
+    title.textContent = "Some readings need attention";
+    text.textContent =
+      "One or more soil parameters are outside the prototype preferred ranges.";
+  } else {
+    badge.classList.add("danger");
+    badge.textContent = "Warning";
+    title.textContent = "Multiple parameters require attention";
+    text.textContent =
+      "Several current readings are outside the prototype preferred ranges.";
   }
 }
 
-function renderAnalytics() {
-  if (!currentLiveData) {
+/* =========================================================
+   ONLINE STATUS
+========================================================= */
+
+function setConnection(online) {
+  const dots = [
+    document.getElementById("sidebarStatusDot"),
+    document.getElementById("topStatusDot")
+  ];
+
+  dots.forEach(dot => {
+    dot.className = `online-dot ${online ? "online" : "offline"}`;
+  });
+
+  document.getElementById("sidebarDeviceStatus").textContent =
+    online ? "Device Online" : "Device Offline";
+
+  document.getElementById("topStatusText").textContent =
+    online ? "Online" : "Offline";
+
+  if (online) {
+    lastFirebaseUpdate = Date.now();
+    document.getElementById("sidebarLastUpdate").textContent =
+      `Updated ${new Date().toLocaleTimeString()}`;
+  }
+}
+
+setInterval(() => {
+  if (lastFirebaseUpdate && Date.now() - lastFirebaseUpdate > 15000) {
+    setConnection(false);
+  }
+}, 3000);
+
+/* =========================================================
+   HISTORY
+========================================================= */
+
+function historyCoverage(samples) {
+  if (samples.length < 2) return samples.length ? "1 sample" : "--";
+
+  const times = samples.map(tsMs).filter(Number.isFinite).sort((a,b) => a-b);
+  if (times.length < 2) return "--";
+
+  const minutes = Math.max(0, Math.round((times.at(-1) - times[0]) / 60000));
+
+  if (minutes >= 1440) return `${(minutes/1440).toFixed(1)} d`;
+  if (minutes >= 60) return `${(minutes/60).toFixed(1)} h`;
+  return `${minutes} min`;
+}
+
+function filterHistoryByMinutes(minutes) {
+  if (!historicalSamples.length) return [];
+
+  const sorted = [...historicalSamples]
+    .filter(s => tsMs(s) !== null)
+    .sort((a,b) => tsMs(a) - tsMs(b));
+
+  if (!sorted.length) return [];
+
+  const newest = tsMs(sorted.at(-1));
+  const cutoff = newest - Number(minutes) * 60000;
+
+  return sorted.filter(s => tsMs(s) >= cutoff);
+}
+
+function renderHistory() {
+  const countEl = document.getElementById("historyCount");
+  const coverageEl = document.getElementById("historyCoverageCard");
+  const avgMoistureEl = document.getElementById("historyAvgMoisture");
+  const avgPhEl = document.getElementById("historyAvgPh");
+  const tbody = document.getElementById("historyTableBody");
+
+  countEl.textContent = historicalSamples.length;
+  coverageEl.textContent = historyCoverage(historicalSamples);
+
+  const avgM = average(historicalSamples.map(s => s.moisture));
+  const avgP = average(historicalSamples.map(s => s.ph));
+
+  avgMoistureEl.textContent = avgM === null ? "--" : `${avgM.toFixed(1)}%`;
+  avgPhEl.textContent = avgP === null ? "--" : avgP.toFixed(2);
+
+  const minutes = Number(document.getElementById("historyChartRange").value);
+  const chartRows = filterHistoryByMinutes(minutes);
+
+  historyChart.data.labels = chartRows.map(s =>
+    new Date(tsMs(s)).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
+  );
+
+  historyChart.data.datasets[0].data = chartRows.map(s => Number(s.moisture));
+  historyChart.data.datasets[1].data = chartRows.map(s => Number(s.temperature));
+  historyChart.data.datasets[2].data = chartRows.map(s => Number(s.ph));
+  historyChart.update("none");
+
+  const rows = [...historicalSamples]
+    .filter(s => tsMs(s) !== null)
+    .sort((a,b) => tsMs(b) - tsMs(a))
+    .slice(0, 100);
+
+  if (!rows.length) {
+    tbody.innerHTML =
+      `<tr><td colspan="9" class="empty-row">No Firebase history has been recorded yet.</td></tr>`;
     return;
   }
 
-  const windowMinutes =
-    Number(analyticsElements.window.value);
+  tbody.innerHTML = rows.map(s => `
+    <tr>
+      <td>${new Date(tsMs(s)).toLocaleString()}</td>
+      <td>${fmt(s.temperature,1)}</td>
+      <td>${fmt(s.moisture,1)}</td>
+      <td>${fmt(s.ph,2)}</td>
+      <td>${fmt(s.ec,0)}</td>
+      <td>${fmt(s.nitrogen,0)}</td>
+      <td>${fmt(s.phosphorus,0)}</td>
+      <td>${fmt(s.potassium,0)}</td>
+      <td>${fmt(s.salinity,0)}</td>
+    </tr>
+  `).join("");
+}
 
-  const result =
-    analyseSoil(
-      currentLiveData,
-      historicalSamples,
-      windowMinutes
-    );
+document.getElementById("downloadHistoryButton").addEventListener("click", () => {
+  if (!historicalSamples.length) {
+    alert("No history data is available to download yet.");
+    return;
+  }
 
-  analyticsElements.score.textContent =
-    result.score;
+  const headers = [
+    "timestamp","date_time","temperature_c","moisture_percent","ph","ec",
+    "nitrogen","phosphorus","potassium","salinity","voltage_v","current_ma"
+  ];
 
-  analyticsElements.scoreRing.style.background =
-    `conic-gradient(
-      #46f28b ${result.score}%,
-      rgba(255,255,255,.05) ${result.score}%
-    )`;
+  const lines = [headers.join(",")];
 
-  clearStateClasses(
-    analyticsElements.status
-  );
+  [...historicalSamples]
+    .sort((a,b) => (tsMs(a) || 0) - (tsMs(b) || 0))
+    .forEach(s => {
+      const t = tsMs(s);
+      const row = [
+        s.timestamp ?? "",
+        t ? `"${new Date(t).toISOString()}"` : "",
+        s.temperature ?? "",
+        s.moisture ?? "",
+        s.ph ?? "",
+        s.ec ?? "",
+        s.nitrogen ?? "",
+        s.phosphorus ?? "",
+        s.potassium ?? "",
+        s.salinity ?? "",
+        s.voltage ?? "",
+        s.current ?? ""
+      ];
+      lines.push(row.join(","));
+    });
 
-  analyticsElements.status.textContent =
-    result.status;
+  const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `AgroSentra001-history-${new Date().toISOString().slice(0,10)}.csv`;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+});
 
-  analyticsElements.status.classList.add(
-    result.statusClass
-  );
+/* =========================================================
+   ANALYTICS
+========================================================= */
 
-  analyticsElements.statusSub.textContent =
-    result.statusSub;
+function applyTrendDisplay(valueEl, detailEl, display) {
+  clearStateClasses(valueEl);
+  valueEl.textContent = display.label;
+  detailEl.textContent = display.detail;
+  if (display.className) valueEl.classList.add(display.className);
+}
+
+function renderAnalytics() {
+  if (!currentLiveData) return;
+
+  const minutes = Number(document.getElementById("analyticsWindow").value);
+  const result = analyseSoil(currentLiveData, historicalSamples, minutes);
+
+  document.getElementById("analyticsScore").textContent = result.score;
+  document.getElementById("analyticsScoreRing").style.background =
+    `conic-gradient(var(--green) ${result.score}%, rgba(127,146,158,.13) ${result.score}%)`;
+
+  const status = document.getElementById("analysisStatus");
+  clearStateClasses(status);
+  status.className = "status-pill";
+  status.textContent = result.status;
+
+  if (result.statusClass === "state-good") status.classList.add("good");
+  else if (result.statusClass === "state-warning") status.classList.add("warning");
+  else if (result.statusClass === "state-danger") status.classList.add("danger");
+  else status.classList.add("neutral");
+
+  document.getElementById("analysisStatusSub").textContent = result.statusSub;
 
   applyTrendDisplay(
-    analyticsElements.moistureTrend,
-    analyticsElements.moistureTrendDetail,
+    document.getElementById("moistureTrend"),
+    document.getElementById("moistureTrendDetail"),
     result.moistureDisplay
   );
 
   applyTrendDisplay(
-    analyticsElements.phTrend,
-    analyticsElements.phTrendDetail,
+    document.getElementById("phTrend"),
+    document.getElementById("phTrendDetail"),
     result.phDisplay
   );
 
-  analyticsElements.nutrientBalance.textContent =
-    result.nutrients.label;
+  document.getElementById("nutrientBalance").textContent = result.nutrients.label;
+  document.getElementById("nutrientBalanceDetail").textContent = result.nutrients.detail;
 
-  analyticsElements.nutrientBalanceDetail.textContent =
-    result.nutrients.detail;
+  document.getElementById("salinityRisk").textContent = result.salinity.label;
+  document.getElementById("salinityRiskDetail").textContent = result.salinity.detail;
 
-  analyticsElements.salinityRisk.textContent =
-    result.salinity.label;
-
-  analyticsElements.salinityRiskDetail.textContent =
-    result.salinity.detail;
-
-  const anomalyEntries =
-    Object.entries(result.anomalies)
-      .filter(([, anomaly]) => anomaly.anomalous);
+  const anomalies = Object.entries(result.anomalies)
+    .filter(([,v]) => v.anomalous);
 
   if (result.sampleCount < 5) {
-    analyticsElements.anomalyState.textContent =
-      "Learning";
-
-    analyticsElements.anomalyDetail.textContent =
-      "At least 5 history samples recommended";
-  } else if (!anomalyEntries.length) {
-    analyticsElements.anomalyState.textContent =
-      "Normal";
-
-    analyticsElements.anomalyDetail.textContent =
-      "Latest values follow recent baseline";
+    document.getElementById("anomalyState").textContent = "Learning";
+    document.getElementById("anomalyDetail").textContent = "At least 5 history samples recommended";
+  } else if (!anomalies.length) {
+    document.getElementById("anomalyState").textContent = "Normal";
+    document.getElementById("anomalyDetail").textContent = "Latest values follow recent baseline";
   } else {
-    analyticsElements.anomalyState.textContent =
-      `${anomalyEntries.length} detected`;
-
-    analyticsElements.anomalyDetail.textContent =
-      anomalyEntries
-        .map(([field]) => {
-          const names = {
-            moisture: "moisture",
-            ph: "pH",
-            temperature: "temperature",
-            ec: "EC",
-            salinity: "salinity"
-          };
-
-          return names[field] || field;
-        })
-        .join(", ");
+    document.getElementById("anomalyState").textContent =
+      `${anomalies.length} detected`;
+    document.getElementById("anomalyDetail").textContent =
+      anomalies.map(([field]) => field).join(", ");
   }
 
-  analyticsElements.sampleCount.textContent =
-    result.sampleCount;
-
-  analyticsElements.coverage.textContent =
-    historyCoverageText(
-      result.samples
-    );
-
-  analyticsElements.confidence.textContent =
+  document.getElementById("historySampleCount").textContent = result.sampleCount;
+  document.getElementById("historyCoverage").textContent = historyCoverage(result.samples);
+  document.getElementById("insightConfidence").textContent =
     `Baseline: ${result.confidence.label}`;
 
-  const relations =
-    contextRelations(
-      currentLiveData,
-      result,
-      environmentalContext
-    );
+  const relations = contextRelations(currentLiveData, result, environmentalContext);
 
-  let combinedInsight =
-    result.insight;
+  document.getElementById("analyticsInsight").textContent =
+    result.insight + (relations.sentence ? ` ${relations.sentence}` : "");
 
-  if (relations.sentence) {
-    combinedInsight +=
-      " " +
-      relations.sentence;
-  }
+  const flags = [...result.flags, ...relations.flags];
+  const unique = [];
 
-  analyticsElements.insight.textContent =
-    combinedInsight;
+  flags.forEach(flag => {
+    if (!unique.some(x => x.text === flag.text)) unique.push(flag);
+  });
 
-  analyticsElements.flags.innerHTML =
-    "";
-
-  const allFlags = [
-    ...result.flags,
-    ...relations.flags
-  ];
-
-  const uniqueFlags = [];
-
-  for (const flag of allFlags) {
-    if (!uniqueFlags.some(item => item.text === flag.text)) {
-      uniqueFlags.push(flag);
-    }
-  }
-
-  uniqueFlags
-    .slice(0, 8)
-    .forEach(flag => {
-      const chip =
-        document.createElement("span");
-
-      chip.className =
-        `insight-chip ${flag.level}`;
-
-      chip.textContent =
-        flag.text;
-
-      analyticsElements.flags
-        .appendChild(chip);
-    });
+  document.getElementById("insightFlags").innerHTML =
+    unique.slice(0,8).map(flag =>
+      `<span class="insight-chip ${flag.level}">${flag.text}</span>`
+    ).join("") || `<span class="insight-chip neutral">Collecting data</span>`;
 
   renderContextRelations(relations);
 }
-analyticsElements.window.addEventListener(
-  "change",
-  renderAnalytics
-);
 
+document.getElementById("analyticsWindow").addEventListener("change", renderAnalytics);
 
-/* =======================================
-   EXTERNAL ENVIRONMENTAL CONTEXT
-======================================= */
+/* =========================================================
+   LOCATION + EXTERNAL WEATHER
+========================================================= */
 
-function safeFixed(value, digits = 1) {
-  return validNumber(value)
-    ? Number(value).toFixed(digits)
-    : "--";
-}
-
-function savedLocationFromStorage() {
+function savedLocation() {
   try {
-    const raw =
-      localStorage.getItem(
-        LOCATION_STORAGE_KEY
-      );
-
+    const raw = localStorage.getItem(LOCATION_KEY);
     if (!raw) return null;
 
-    const parsed =
-      JSON.parse(raw);
-
+    const parsed = JSON.parse(raw);
     if (
       validCoordinate(parsed.latitude, "latitude") &&
       validCoordinate(parsed.longitude, "longitude")
-    ) {
-      return parsed;
-    }
-  } catch (error) {
-    console.warn(
-      "Could not read saved AgroSentra location.",
-      error
-    );
-  }
+    ) return parsed;
+  } catch (_) {}
 
   return null;
 }
 
-function saveLocationToStorage(location) {
-  localStorage.setItem(
-    LOCATION_STORAGE_KEY,
-    JSON.stringify(location)
-  );
-}
-
-function removeSavedLocation() {
-  localStorage.removeItem(
-    LOCATION_STORAGE_KEY
-  );
-}
-
-function locationFromLiveData(data) {
-  if (!data) return null;
-
+function firebaseLocation(data) {
   if (
+    data &&
     validCoordinate(data.latitude, "latitude") &&
     validCoordinate(data.longitude, "longitude")
   ) {
     return {
       latitude: Number(data.latitude),
       longitude: Number(data.longitude),
-      label:
-        typeof data.location_label === "string" &&
-        data.location_label.trim()
-          ? data.location_label.trim()
-          : "Probe location",
+      label: (data.location_label || "Probe location").trim(),
       source: "firebase"
     };
   }
@@ -788,729 +744,287 @@ function locationFromLiveData(data) {
   return null;
 }
 
+function updateLocationUI() {
+  if (!monitoringLocation) return;
+
+  const lat = Number(monitoringLocation.latitude);
+  const lon = Number(monitoringLocation.longitude);
+  const coordText = `${lat.toFixed(5)}, ${lon.toFixed(5)}`;
+
+  document.getElementById("topbarLocation").textContent = monitoringLocation.label;
+  document.getElementById("monitoringLocation").textContent = monitoringLocation.label;
+  document.getElementById("contextCoordinates").textContent = coordText;
+
+  document.getElementById("settingsCurrentLocation").textContent = monitoringLocation.label;
+  document.getElementById("settingsCurrentCoordinates").textContent =
+    `${lat.toFixed(5)}° ${lat >= 0 ? "N" : "S"}, ${Math.abs(lon).toFixed(5)}° ${lon >= 0 ? "E" : "W"}`;
+
+  document.getElementById("latitudeInput").value = lat;
+  document.getElementById("longitudeInput").value = lon;
+  document.getElementById("locationNameInput").value = monitoringLocation.label;
+}
+
 function setContextBadge(state, text) {
-  contextElements.syncBadge.classList.remove(
-    "synced",
-    "error"
-  );
-
-  if (state) {
-    contextElements.syncBadge.classList.add(
-      state
-    );
-  }
-
-  contextElements.syncBadge.innerHTML =
-    `<span class="context-sync-dot"></span>${text}`;
+  const badge = document.getElementById("contextSyncBadge");
+  badge.className = `context-sync ${state || ""}`;
+  badge.innerHTML = `<span></span>${text}`;
 }
 
-function updateLocationDisplay() {
-  if (!monitoringLocation) {
-    contextElements.monitoringLocation.textContent =
-      "Not configured";
+function renderWeather() {
+  if (!environmentalContext) return;
 
-    contextElements.coordinates.textContent =
-      "--";
+  document.getElementById("rainfall6h").textContent =
+    fmt(environmentalContext.rainfall6h, 1);
 
-    contextElements.locationButtonLabel.textContent =
-      "Change Location";
+  const rainfall = Number(environmentalContext.rainfall6h);
+  document.getElementById("rainfallInterpretation").textContent =
+    !Number.isFinite(rainfall) ? "Recent rainfall unavailable" :
+    rainfall < .2 ? "No meaningful recent rainfall" :
+    rainfall < 2.5 ? "Light recent rainfall" :
+    rainfall < 10 ? "Recent rainfall detected" :
+    "Heavy recent rainfall";
 
-    return;
-  }
+  document.getElementById("externalAirTemperature").textContent =
+    fmt(environmentalContext.airTemperature, 1);
 
-  contextElements.monitoringLocation.textContent =
-    monitoringLocation.label ||
-    "Monitoring location";
+  document.getElementById("externalHumidity").textContent =
+    fmt(environmentalContext.humidity, 0);
 
-  contextElements.coordinates.textContent =
-    `${Number(monitoringLocation.latitude).toFixed(5)}, ${Number(monitoringLocation.longitude).toFixed(5)}`;
+  const humidity = Number(environmentalContext.humidity);
+  document.getElementById("humidityInterpretation").textContent =
+    !Number.isFinite(humidity) ? "Humidity unavailable" :
+    humidity >= 85 ? "Very humid atmospheric conditions" :
+    humidity >= 65 ? "Humid atmospheric conditions" :
+    humidity >= 40 ? "Moderate atmospheric humidity" :
+    "Relatively dry atmospheric conditions";
 
-  contextElements.locationButtonLabel.textContent =
-    "Change Location";
-}
+  document.getElementById("modelSoilTemperature").textContent =
+    fmt(environmentalContext.modelSoilTemperature, 1);
 
-function rainfallDescription(value) {
-  if (!validNumber(value)) {
-    return "Recent rainfall unavailable";
-  }
+  document.getElementById("modelSoilMoisture").textContent =
+    fmt(environmentalContext.modelSoilMoisturePercent, 1);
 
-  const rainfall =
-    Number(value);
+  document.getElementById("weatherContextState").textContent =
+    environmentalContext.weatherLabel || "Synced";
 
-  if (rainfall < 0.2) {
-    return "No meaningful recent rainfall";
-  }
-
-  if (rainfall < 2.5) {
-    return "Light recent rainfall";
-  }
-
-  if (rainfall < 10) {
-    return "Recent rainfall detected";
-  }
-
-  return "Heavy recent rainfall";
-}
-
-function humidityDescription(value) {
-  if (!validNumber(value)) {
-    return "Humidity unavailable";
-  }
-
-  const humidity =
-    Number(value);
-
-  if (humidity >= 85) {
-    return "Very humid atmospheric conditions";
-  }
-
-  if (humidity >= 65) {
-    return "Humid atmospheric conditions";
-  }
-
-  if (humidity >= 40) {
-    return "Moderate atmospheric humidity";
-  }
-
-  return "Relatively dry atmospheric conditions";
-}
-
-function renderEnvironmentalContext() {
-  updateLocationDisplay();
-
-  if (!environmentalContext) {
-    contextElements.rainfall6h.textContent = "--";
-    contextElements.airTemperature.textContent = "--";
-    contextElements.humidity.textContent = "--";
-    contextElements.modelSoilTemperature.textContent = "--";
-    contextElements.modelSoilMoisture.textContent = "--";
-    contextElements.weatherState.textContent = "Not available";
-
-    return;
-  }
-
-  contextElements.rainfall6h.textContent =
-    safeFixed(
-      environmentalContext.rainfall6h,
-      1
-    );
-
-  contextElements.rainfallInterpretation.textContent =
-    rainfallDescription(
-      environmentalContext.rainfall6h
-    );
-
-  contextElements.airTemperature.textContent =
-    safeFixed(
-      environmentalContext.airTemperature,
-      1
-    );
-
-  contextElements.humidity.textContent =
-    safeFixed(
-      environmentalContext.humidity,
-      0
-    );
-
-  contextElements.humidityInterpretation.textContent =
-    humidityDescription(
-      environmentalContext.humidity
-    );
-
-  contextElements.modelSoilTemperature.textContent =
-    safeFixed(
-      environmentalContext.modelSoilTemperature,
-      1
-    );
-
-  contextElements.modelSoilMoisture.textContent =
-    safeFixed(
-      environmentalContext.modelSoilMoisturePercent,
-      1
-    );
-
-  contextElements.weatherState.textContent =
-    environmentalContext.weatherLabel ||
-    "Context synced";
-
-  const precipNow =
+  document.getElementById("weatherContextDetail").textContent =
     validNumber(environmentalContext.precipitationNow)
       ? `${Number(environmentalContext.precipitationNow).toFixed(1)} mm current precipitation`
       : "Current precipitation unavailable";
 
-  contextElements.weatherDetail.textContent =
-    precipNow;
-
-  contextElements.updated.textContent =
-    "External sync " +
-    new Date(
-      environmentalContext.fetchedAt
-    ).toLocaleTimeString([], {
-      hour: "2-digit",
-      minute: "2-digit"
-    });
+  document.getElementById("contextUpdated").textContent =
+    `External sync ${new Date(environmentalContext.fetchedAt).toLocaleTimeString([], {
+      hour: "2-digit", minute: "2-digit"
+    })}`;
 }
 
 function renderContextRelations(relations = null) {
   if (!relations) {
-    if (!currentLiveData || !environmentalContext) {
-      return;
-    }
+    if (!currentLiveData || !environmentalContext) return;
 
-    const windowMinutes =
-      Number(
-        analyticsElements.window.value
-      );
+    const result = analyseSoil(
+      currentLiveData,
+      historicalSamples,
+      Number(document.getElementById("analyticsWindow").value)
+    );
 
-    const result =
-      analyseSoil(
-        currentLiveData,
-        historicalSamples,
-        windowMinutes
-      );
-
-    relations =
-      contextRelations(
-        currentLiveData,
-        result,
-        environmentalContext
-      );
+    relations = contextRelations(currentLiveData, result, environmentalContext);
   }
 
-  contextElements.moistureRelation.textContent =
+  document.getElementById("moistureWeatherRelation").textContent =
     relations.moisture.label;
-
-  contextElements.moistureRelationDetail.textContent =
+  document.getElementById("moistureWeatherRelationDetail").textContent =
     relations.moisture.detail;
 
-  contextElements.temperatureRelation.textContent =
+  document.getElementById("temperatureRelation").textContent =
     relations.temperature.label;
-
-  contextElements.temperatureRelationDetail.textContent =
+  document.getElementById("temperatureRelationDetail").textContent =
     relations.temperature.detail;
 
-  contextElements.confidence.textContent =
+  document.getElementById("environmentConfidence").textContent =
     relations.confidence.label;
-
-  contextElements.confidenceDetail.textContent =
+  document.getElementById("environmentConfidenceDetail").textContent =
     relations.confidence.detail;
 }
 
-async function syncExternalContext(force = false) {
-  if (!monitoringLocation) {
-    environmentalContext = null;
+async function syncWeather(force = false) {
+  if (!monitoringLocation) return;
 
-    setContextBadge(
-      "",
-      "Awaiting location"
-    );
+  const age = environmentalContext
+    ? Date.now() - Number(environmentalContext.fetchedAt)
+    : Infinity;
 
-    renderEnvironmentalContext();
-    renderAnalytics();
+  if (!force && age < EXTERNAL_REFRESH_MS) return;
 
-    return;
-  }
-
-  const age =
-    environmentalContext
-      ? Date.now() -
-        Number(environmentalContext.fetchedAt)
-      : Infinity;
-
-  if (!force &&
-      environmentalContext &&
-      age < EXTERNAL_REFRESH_MS) {
-    return;
-  }
-
-  setContextBadge(
-    "",
-    "Syncing context..."
-  );
+  setContextBadge("", "Syncing");
 
   try {
-    const context =
-      await fetchEnvironmentalContext(
-        monitoringLocation.latitude,
-        monitoringLocation.longitude
-      );
-
-    environmentalContext =
-      context;
-
-    setContextBadge(
-      "synced",
-      "Context synced"
+    environmentalContext = await fetchEnvironmentalContext(
+      monitoringLocation.latitude,
+      monitoringLocation.longitude
     );
 
-    renderEnvironmentalContext();
+    setContextBadge("synced", "Context synced");
+    renderWeather();
     renderAnalytics();
-
   } catch (error) {
-    console.error(
-      "External environmental context error:",
-      error
-    );
-
-    setContextBadge(
-      "error",
-      "Context unavailable"
-    );
-
-    contextElements.updated.textContent =
-      "External sync failed";
-
-    contextElements.weatherState.textContent =
-      "Unavailable";
-
-    contextElements.weatherDetail.textContent =
-      "Check internet access or monitoring coordinates.";
-
-    renderAnalytics();
+    console.error("External context error:", error);
+    setContextBadge("error", "Context unavailable");
+    document.getElementById("contextUpdated").textContent = "External sync failed";
   }
 }
 
-function applyMonitoringLocation(location, save = false) {
-  monitoringLocation =
-    location;
+function applyLocation(location, save = false) {
+  monitoringLocation = location;
 
-  if (save &&
-      location?.source !== "firebase") {
-    saveLocationToStorage(
-      location
-    );
+  if (save && location.source !== "firebase") {
+    localStorage.setItem(LOCATION_KEY, JSON.stringify(location));
   }
 
-  updateLocationDisplay();
-  syncExternalContext(true);
+  updateLocationUI();
+  syncWeather(true);
 
-  if (externalRefreshTimer) {
-    clearInterval(
-      externalRefreshTimer
-    );
-  }
+  if (externalRefreshTimer) clearInterval(externalRefreshTimer);
 
-  externalRefreshTimer =
-    setInterval(
-      () => {
-        syncExternalContext(true);
-      },
-      EXTERNAL_REFRESH_MS
-    );
-}
-
-function openLocationModal() {
-  contextElements.error.textContent =
-    "";
-
-  if (monitoringLocation) {
-    contextElements.latitudeInput.value =
-      monitoringLocation.latitude;
-
-    contextElements.longitudeInput.value =
-      monitoringLocation.longitude;
-
-    contextElements.locationNameInput.value =
-      monitoringLocation.label || "";
-  }
-
-  contextElements.modal.classList.add(
-    "open"
-  );
-
-  contextElements.modal.setAttribute(
-    "aria-hidden",
-    "false"
+  externalRefreshTimer = setInterval(
+    () => syncWeather(true),
+    EXTERNAL_REFRESH_MS
   );
 }
 
-function closeLocationModal() {
-  contextElements.modal.classList.remove(
-    "open"
-  );
+document.getElementById("saveLocationButton").addEventListener("click", () => {
+  const lat = Number(document.getElementById("latitudeInput").value);
+  const lon = Number(document.getElementById("longitudeInput").value);
+  const label = document.getElementById("locationNameInput").value.trim() || "Monitoring site";
+  const error = document.getElementById("locationError");
 
-  contextElements.modal.setAttribute(
-    "aria-hidden",
-    "true"
-  );
-}
+  error.textContent = "";
 
-contextElements.openLocationButton.addEventListener(
-  "click",
-  openLocationModal
-);
-
-contextElements.closeButton.addEventListener(
-  "click",
-  closeLocationModal
-);
-
-contextElements.modal.addEventListener(
-  "click",
-  event => {
-    if (event.target === contextElements.modal) {
-      closeLocationModal();
-    }
-  }
-);
-
-document.addEventListener(
-  "keydown",
-  event => {
-    if (event.key === "Escape") {
-      closeLocationModal();
-    }
-  }
-);
-
-contextElements.currentLocationButton.addEventListener(
-  "click",
-  () => {
-    contextElements.error.textContent =
-      "";
-
-    if (!navigator.geolocation) {
-      contextElements.error.textContent =
-        "Geolocation is not supported by this browser.";
-
-      return;
-    }
-
-    contextElements.currentLocationButton.disabled =
-      true;
-
-    contextElements.currentLocationButton.textContent =
-      "Requesting location...";
-
-    navigator.geolocation.getCurrentPosition(
-      position => {
-        contextElements.latitudeInput.value =
-          position.coords.latitude.toFixed(6);
-
-        contextElements.longitudeInput.value =
-          position.coords.longitude.toFixed(6);
-
-        contextElements.currentLocationButton.disabled =
-          false;
-
-        contextElements.currentLocationButton.innerHTML =
-          '<i data-lucide="locate-fixed"></i>Use this device location';
-
-        lucide.createIcons();
-      },
-      error => {
-        contextElements.currentLocationButton.disabled =
-          false;
-
-        contextElements.currentLocationButton.innerHTML =
-          '<i data-lucide="locate-fixed"></i>Use this device location';
-
-        lucide.createIcons();
-
-        contextElements.error.textContent =
-          error.message ||
-          "Location permission was not granted.";
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 60000
-      }
-    );
-  }
-);
-
-contextElements.saveButton.addEventListener(
-  "click",
-  () => {
-    const latitude =
-      Number(
-        contextElements.latitudeInput.value
-      );
-
-    const longitude =
-      Number(
-        contextElements.longitudeInput.value
-      );
-
-    if (!validCoordinate(latitude, "latitude")) {
-      contextElements.error.textContent =
-        "Enter a valid latitude between -90 and 90.";
-
-      return;
-    }
-
-    if (!validCoordinate(longitude, "longitude")) {
-      contextElements.error.textContent =
-        "Enter a valid longitude between -180 and 180.";
-
-      return;
-    }
-
-    const label =
-      contextElements.locationNameInput.value.trim() ||
-      "Monitoring site";
-
-    const location = {
-      latitude,
-      longitude,
-      label,
-      source: "browser"
-    };
-
-    applyMonitoringLocation(
-      location,
-      true
-    );
-
-    closeLocationModal();
-  }
-);
-
-contextElements.clearButton.addEventListener(
-  "click",
-  () => {
-    removeSavedLocation();
-
-    const firebaseLocation =
-      locationFromLiveData(
-        currentLiveData
-      );
-
-    environmentalContext =
-      null;
-
-    if (firebaseLocation) {
-      applyMonitoringLocation(
-        firebaseLocation,
-        false
-      );
-    } else {
-      applyMonitoringLocation(
-        DEFAULT_LOCATION,
-        false
-      );
-    }
-
-    closeLocationModal();
-  }
-);
-
-const initiallySavedLocation =
-  savedLocationFromStorage();
-
-if (initiallySavedLocation) {
-  applyMonitoringLocation(
-    {
-      ...initiallySavedLocation,
-      source: "browser"
-    },
-    false
-  );
-} else {
-  applyMonitoringLocation(
-    DEFAULT_LOCATION,
-    false
-  );
-}
-
-
-/* =======================================
-   ONLINE / OFFLINE
-======================================= */
-
-let lastFirebaseUpdate = 0;
-
-function setOnline() {
-  lastFirebaseUpdate = Date.now();
-
-  const dot =
-    document.getElementById("statusDot");
-
-  dot.className =
-    "status-dot online";
-
-  document.getElementById(
-    "connectionStatus"
-  ).textContent =
-    "Device Online";
-
-  document.getElementById(
-    "firebaseStatus"
-  ).textContent =
-    "Connected";
-
-  document.getElementById(
-    "lastUpdated"
-  ).textContent =
-    "Updated " +
-    new Date().toLocaleTimeString();
-}
-
-function setOffline() {
-  const dot =
-    document.getElementById("statusDot");
-
-  dot.className =
-    "status-dot offline";
-
-  document.getElementById(
-    "connectionStatus"
-  ).textContent =
-    "Device Offline";
-}
-
-setInterval(() => {
-  if (lastFirebaseUpdate === 0) {
+  if (!validCoordinate(lat, "latitude")) {
+    error.textContent = "Enter a valid latitude between -90 and 90.";
     return;
   }
 
-  const elapsed =
-    Date.now() - lastFirebaseUpdate;
-
-  if (elapsed > 15000) {
-    setOffline();
+  if (!validCoordinate(lon, "longitude")) {
+    error.textContent = "Enter a valid longitude between -180 and 180.";
+    return;
   }
-}, 3000);
 
+  applyLocation({ latitude: lat, longitude: lon, label, source: "browser" }, true);
+});
 
-/* =======================================
-   FIREBASE LIVE DATA
-======================================= */
+document.getElementById("resetLocationButton").addEventListener("click", () => {
+  localStorage.removeItem(LOCATION_KEY);
+  applyLocation(DEFAULT_LOCATION, false);
+});
 
-const livePath =
-  ref(
-    database,
-    "devices/agrosentra-001/live"
+document.getElementById("useCurrentLocationButton").addEventListener("click", () => {
+  const btn = document.getElementById("useCurrentLocationButton");
+  const error = document.getElementById("locationError");
+  error.textContent = "";
+
+  if (!navigator.geolocation) {
+    error.textContent = "Geolocation is not supported by this browser.";
+    return;
+  }
+
+  btn.disabled = true;
+  btn.textContent = "Requesting location...";
+
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      document.getElementById("latitudeInput").value =
+        pos.coords.latitude.toFixed(6);
+      document.getElementById("longitudeInput").value =
+        pos.coords.longitude.toFixed(6);
+
+      btn.disabled = false;
+      btn.innerHTML = '<i data-lucide="locate-fixed"></i>Use this device location';
+      lucide.createIcons();
+    },
+    err => {
+      btn.disabled = false;
+      btn.innerHTML = '<i data-lucide="locate-fixed"></i>Use this device location';
+      error.textContent = err.message || "Location permission was not granted.";
+      lucide.createIcons();
+    },
+    { enableHighAccuracy: true, timeout: 10000, maximumAge: 60000 }
   );
+});
+
+const initialLocation = savedLocation() || DEFAULT_LOCATION;
+applyLocation({ ...initialLocation, source: initialLocation.source || "browser" }, false);
+
+/* =========================================================
+   FIREBASE LIVE
+========================================================= */
+
+const liveRef = ref(database, "devices/agrosentra-001/live");
 
 onValue(
-  livePath,
-
+  liveRef,
   snapshot => {
     if (!snapshot.exists()) {
-      document.getElementById(
-        "firebaseStatus"
-      ).textContent =
-        "No Data";
-
+      document.getElementById("firebaseStatus").textContent = "No Data";
       return;
     }
 
-    const data =
-      snapshot.val();
+    const data = snapshot.val();
+    currentLiveData = data;
 
-    currentLiveData =
-      data;
+    const probeLocation = firebaseLocation(data);
 
-    const firebaseLocation =
-      locationFromLiveData(
-        data
-      );
+    if (probeLocation) {
+      const changed =
+        monitoringLocation?.source !== "firebase" ||
+        Number(monitoringLocation.latitude) !== Number(probeLocation.latitude) ||
+        Number(monitoringLocation.longitude) !== Number(probeLocation.longitude);
 
-    if (firebaseLocation) {
-      const locationChanged =
-        !monitoringLocation ||
-        monitoringLocation.source !== "firebase" ||
-        Number(monitoringLocation.latitude) !==
-          Number(firebaseLocation.latitude) ||
-        Number(monitoringLocation.longitude) !==
-          Number(firebaseLocation.longitude);
-
-      if (locationChanged) {
-        applyMonitoringLocation(
-          firebaseLocation,
-          false
-        );
-      }
+      if (changed) applyLocation(probeLocation, false);
     }
 
-    console.log(
-      "AgroSentra live:",
-      data
-    );
-
-    setOnline();
-    updateSensorValues(data);
-    updateHardwareStatus(data);
-    updateHealth(data);
-    addChartReading(data);
+    updateLiveValues(data);
+    updateDashboardCondition(data);
+    addLiveChartReading(data);
+    setConnection(true);
     renderAnalytics();
   },
-
   error => {
-    console.error(
-      "Firebase live error:",
-      error
-    );
-
-    document.getElementById(
-      "firebaseStatus"
-    ).textContent =
-      "Firebase Error";
-
-    setOffline();
+    console.error("Firebase live error:", error);
+    document.getElementById("firebaseStatus").textContent = "Firebase Error";
+    setConnection(false);
   }
 );
 
-
-/* =======================================
+/* =========================================================
    FIREBASE HISTORY
-   Stage 2: loads up to the latest 1440
-   1-minute samples (about 24 hours).
-======================================= */
+========================================================= */
 
-const historyRef =
-  ref(
-    database,
-    "devices/agrosentra-001/history"
-  );
+const historyRef = ref(database, "devices/agrosentra-001/history");
 
-const historyQuery =
-  query(
-    historyRef,
-    orderByChild("timestamp"),
-    limitToLast(1440)
-  );
+const historyQuery = query(
+  historyRef,
+  orderByChild("timestamp"),
+  limitToLast(1440)
+);
 
 onValue(
   historyQuery,
-
   snapshot => {
     const rows = [];
 
-    snapshot.forEach(childSnapshot => {
-      const value =
-        childSnapshot.val();
-
-      if (value) {
-        rows.push({
-          id: childSnapshot.key,
-          ...value
-        });
-      }
+    snapshot.forEach(child => {
+      const value = child.val();
+      if (value) rows.push({ id: child.key, ...value });
     });
 
-    historicalSamples =
-      rows;
-
-    console.log(
-      `AgroSentra history: ${rows.length} samples`
-    );
-
+    historicalSamples = rows;
+    renderHistory();
     renderAnalytics();
   },
-
   error => {
-    console.error(
-      "Firebase history error:",
-      error
-    );
-
-    analyticsElements.coverage.textContent =
-      "History unavailable";
-
-    analyticsElements.insight.textContent =
-      "Live monitoring is available, but Firebase history could not be loaded. Check the Realtime Database rules and timestamp index.";
+    console.error("Firebase history error:", error);
+    document.getElementById("historyTableBody").innerHTML =
+      `<tr><td colspan="9" class="empty-row">History could not be loaded. Check Firebase database rules.</td></tr>`;
   }
 );

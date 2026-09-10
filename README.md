@@ -1,179 +1,77 @@
-# AgroSentra GitHub Pages Dashboard
+# AgroSentra001 — Multi-View Soil Monitoring Dashboard
 
-This package is the website-only version of AgroSentra.
+This build reorganizes the interface so the main dashboard is no longer overloaded.
 
-## GitHub Pages deployment
+## Views
 
-Upload these files directly to the root of your GitHub repository:
+- Dashboard — clean overview with four main readings, health status and quick links
+- Live Soil Data — live graph plus all ten current readings
+- History — historical chart, recent table and CSV download
+- AI Analytics — Stage 1 + Stage 2 trend, anomaly and baseline analysis
+- External Weather — Open-Meteo rainfall / temperature / humidity / model soil context
+- Device Info — AgroSentra001 model image, hardware description and system status
+- Settings — theme and monitoring-location controls
 
-- index.html
-- styles.css
-- app.js
-- firebase-config.js
-- .nojekyll
-- README.md
+## Themes
 
-Then go to:
+Settings includes:
 
-Settings -> Pages
+- Agro Dark
+- Midnight
+- Light
 
-Choose:
+Theme selection is stored in browser localStorage.
 
-- Source: Deploy from a branch
-- Branch: main
-- Folder: / (root)
+## Monitoring location
 
-Save the settings.
+Default:
 
-GitHub Pages will serve `index.html` directly from the main branch.
+The Waterfront Hotel, Kuching
+Latitude 1.560
+Longitude 110.345
+
+Users can:
+
+- use browser geolocation
+- enter custom coordinates
+- add a custom location label
+- reset to the default Waterfront Hotel location
+
+If Firebase live data contains `latitude` and `longitude`, the probe location takes priority.
 
 ## Firebase
 
-The dashboard reads live values from:
+Live path:
 
 `devices/agrosentra-001/live`
 
-The Firebase web configuration is already included in `firebase-config.js`.
+History path:
 
-## Important
+`devices/agrosentra-001/history`
 
-This package does not require:
+The dashboard loads up to 1440 recent history samples.
 
-- Firebase Hosting
-- Firebase CLI
-- npm
-- node_modules
-- firebase.json
-- .firebaserc
-- public/ folder
+## History export
 
-Firebase is used only as the Realtime Database backend.
+The History page includes **Download CSV**. It exports loaded history with:
 
+- timestamp
+- date/time
+- temperature
+- moisture
+- pH
+- EC
+- N
+- P
+- K
+- salinity
+- voltage
+- current
 
-## Branding
+## GitHub Pages
 
-This version includes the AgroSentra logo as `agrosentra-logo.png`.
+Upload all files in this ZIP directly to your GitHub repository root.
 
-Dashboard credit:
-`Dashboard developed by Muhammad Irfan | Faculty of Electrical Engineering | Part 5`
+Settings -> Pages -> Deploy from a branch -> main -> /(root)
 
-
-## Latest visual update
-
-- larger AgroSentra logo
-- animated green glow behind the logo
-- developer credit moved directly under the sidebar logo
-- subtle logo floating animation
-- staggered sensor-card entrance animation
-- panel entrance animation
-- animated health ring and online status glow
-- shimmer interaction on sensor cards
-
-
-## Stage 1 + Stage 2 Soil Analytics
-
-This build adds browser-side intelligent soil analytics without requiring an external AI API.
-
-### Stage 1 — Live analytics
-
-The dashboard now calculates:
-
-- Soil Stability Score (0–100)
-- live range checks
-- moisture trend
-- pH trend
-- NPK relative balance
-- salinity risk
-- historical anomaly detection
-- automatically generated interpretation text
-- analysis flags
-
-### Stage 2 — Firebase history analytics
-
-The dashboard reads:
-
-`/devices/agrosentra-001/history`
-
-and can analyse:
-
-- last 10 minutes
-- last 1 hour
-- last 24 hours
-
-The current firmware stores approximately one history sample per minute. The dashboard requests up to the latest 1440 samples, which represents about 24 hours of history.
-
-The analytics engine compares the latest reading with recent historical averages and variation. An anomaly is raised when the latest value differs significantly from the recent baseline.
-
-### Important technical note
-
-This is a local statistical/rule-based analytics engine. It does not call an external generative AI service and therefore requires no AI API key or additional backend.
-
-The salinity and nutrient bands are prototype indicators. Final thresholds should be calibrated against the exact soil probe documentation, measurement units, soil type, crop requirements and laboratory/reference data.
-
-
-## External Environmental Context
-
-This build adds context-aware analysis using Open-Meteo.
-
-The browser requests:
-
-- current air temperature
-- relative humidity
-- precipitation
-- rain
-- weather code
-- modelled soil temperature near 0 cm
-- modelled volumetric soil moisture at 0–1 cm
-- approximately 24 hours of hourly weather context
-
-The dashboard calculates recent 6-hour precipitation and compares it with the AgroSentra probe's moisture trend.
-
-Examples of context-aware interpretation:
-
-- rising probe moisture + recent modelled rain -> moisture response is consistent with rainfall
-- rising probe moisture + no meaningful modelled rain -> local irrigation, ponding or another local water source may be contributing
-- falling probe moisture + no recent rain -> drying pattern
-- modelled rain + stable probe moisture -> limited measured response
-
-### Monitoring location
-
-Location priority:
-
-1. If Firebase live data includes `latitude` and `longitude`, those values are used automatically.
-2. Otherwise, a monitoring location saved in the browser is used.
-3. If neither exists, use the dashboard's **Set Monitoring Location** button.
-
-Optional Firebase fields:
-
-```json
-{
-  "latitude": 1.5533,
-  "longitude": 110.3592,
-  "location_label": "Plot A"
-}
-```
-
-The browser location is stored only in `localStorage` unless the coordinates are supplied through Firebase.
-
-### Important
-
-Open-Meteo modelled soil values are contextual references. They are not substitutes for the physical soil probe and should not be presented as laboratory-grade measurements.
-
-No external AI API key is used. Context interpretation is performed locally in the browser.
-
-
-## Default demo location
-
-The website now starts with:
-
-- The Waterfront Hotel, Kuching
-- Latitude: 1.560
-- Longitude: 110.345
-
-Users can still change the monitoring location, use browser geolocation, enter custom coordinates, or reset back to the Waterfront Hotel default.
-
-Location priority remains:
-
-1. Firebase latitude/longitude from the probe, if present
-2. Browser-saved custom location
-3. Default Waterfront Hotel, Kuching location
+No Firebase CLI is required.
