@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#05090d">
+  <title>AgroSentra | Smart Soil Monitoring</title>
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="./styles.css">
+
+  <script src="https://unpkg.com/lucide@latest"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+  <div class="page-glow glow-one"></div>
+  <div class="page-glow glow-two"></div>
+
+  <div class="app">
+    <aside class="sidebar">
+      <div class="brand">
+        <div class="brand-logo">
+          <i data-lucide="sprout"></i>
+        </div>
+
+        <div class="brand-copy">
+          <strong>AgroSentra</strong>
+          <span>Smart Agriculture</span>
+        </div>
+      </div>
+
+      <nav class="navigation">
+        <button class="nav-button active">
+          <i data-lucide="layout-dashboard"></i>
+          <span>Dashboard</span>
+        </button>
+
+        <button class="nav-button">
+          <i data-lucide="activity"></i>
+          <span>Live Data</span>
+        </button>
+
+        <button class="nav-button">
+          <i data-lucide="history"></i>
+          <span>History</span>
+        </button>
+
+        <button class="nav-button">
+          <i data-lucide="settings"></i>
+          <span>Settings</span>
+        </button>
+      </nav>
+
+      <div class="sidebar-message">
+        <i data-lucide="leaf"></i>
+        <p>
+          better data.<br>
+          healthier soil.<br>
+          smarter farming.
+        </p>
+      </div>
+    </aside>
+
+    <main class="main">
+      <section class="hero">
+        <div class="hero-content">
+          <div class="eyebrow">SMART FARM MONITORING SYSTEM</div>
+
+          <h1>
+            Monitor your soil.
+            <span>Grow smarter.</span>
+          </h1>
+
+          <p>
+            Live soil, nutrient and power monitoring powered by AgroSentra.
+          </p>
+        </div>
+
+        <div class="device-status">
+          <span id="statusDot" class="status-dot waiting"></span>
+
+          <div>
+            <strong id="connectionStatus">Connecting...</strong>
+            <span id="lastUpdated">Waiting for Firebase</span>
+          </div>
+        </div>
+      </section>
+
+      <section class="sensor-grid">
+        <article class="sensor-card orange">
+          <div class="sensor-header">
+            <div class="sensor-icon"><i data-lucide="zap"></i></div>
+            <span>Voltage</span>
+          </div>
+
+          <div class="sensor-value">
+            <strong id="voltage">--</strong>
+            <small>V</small>
+          </div>
+        </article>
+
+        <article class="sensor-card orange">
+          <div class="sensor-header">
+            <div class="sensor-icon"><i data-lucide="gauge"></i></div>
+            <span>Current</span>
+          </div>
+
+          <div class="sensor-value">
+            <strong id="current">--</strong>
+            <small>mA</small>
+          </div>
+        </article>
+
+        <article class="sensor-card green">
+          <div class="sensor-header">
+            <div class="sensor-icon"><i data-lucide="thermometer"></i></div>
+            <span>Temperature</span>
+          </div>
+
+          <div class="sensor-value">
+            <strong id="temperature">--</strong>
+            <small>°C</small>
+          </div>
+        </article>
+
+        <article class="sensor-card green">
+          <div class="sensor-header">
+            <div class="sensor-icon"><i data-lucide="droplets"></i></div>
+            <span>Moisture</span>
+          </div>
+
+          <div class="sensor-value">
+            <strong id="moisture">--</strong>
+            <small>%</small>
+          </div>
+        </article>
+
+        <article class="sensor-card blue">
+          <div class="sensor-header">
+            <div class="sensor-icon"><i data-lucide="flask-conical"></i></div>
+            <span>Soil pH</span>
+          </div>
+
+          <div class="sensor-value">
+            <strong id="ph">--</strong>
+            <small>pH</small>
+          </div>
+        </article>
+
+        <article class="sensor-card blue">
+          <div class="sensor-header">
+            <div class="sensor-icon"><i data-lucide="radio-tower"></i></div>
+            <span>Conductivity</span>
+          </div>
+
+          <div class="sensor-value">
+            <strong id="ec">--</strong>
+            <small>µS/cm</small>
+          </div>
+        </article>
+
+        <article class="sensor-card purple">
+          <div class="sensor-header">
+            <div class="sensor-icon"><i data-lucide="leaf"></i></div>
+            <span>Nitrogen</span>
+          </div>
+
+          <div class="sensor-value">
+            <strong id="nitrogen">--</strong>
+            <small>N</small>
+          </div>
+        </article>
+
+        <article class="sensor-card purple">
+          <div class="sensor-header">
+            <div class="sensor-icon"><i data-lucide="flower-2"></i></div>
+            <span>Phosphorus</span>
+          </div>
+
+          <div class="sensor-value">
+            <strong id="phosphorus">--</strong>
+            <small>P</small>
+          </div>
+        </article>
+
+        <article class="sensor-card purple">
+          <div class="sensor-header">
+            <div class="sensor-icon"><i data-lucide="hexagon"></i></div>
+            <span>Potassium</span>
+          </div>
+
+          <div class="sensor-value">
+            <strong id="potassium">--</strong>
+            <small>K</small>
+          </div>
+        </article>
+
+        <article class="sensor-card cyan">
+          <div class="sensor-header">
+            <div class="sensor-icon"><i data-lucide="waves"></i></div>
+            <span>Salinity</span>
+          </div>
+
+          <div class="sensor-value">
+            <strong id="salinity">--</strong>
+            <small>S</small>
+          </div>
+        </article>
+      </section>
+
+      <section class="dashboard-grid">
+        <article class="panel live-panel">
+          <div class="panel-header">
+            <div>
+              <span class="panel-label">REAL-TIME MONITORING</span>
+              <h2>Live Sensor Data</h2>
+            </div>
+
+            <div class="live-badge">
+              <span></span>
+              LIVE
+            </div>
+          </div>
+
+          <div class="chart-wrapper">
+            <canvas id="sensorChart"></canvas>
+          </div>
+        </article>
+
+        <article class="panel health-panel">
+          <div class="panel-header">
+            <div>
+              <span class="panel-label">SOIL ANALYSIS</span>
+              <h2>Soil Health</h2>
+            </div>
+          </div>
+
+          <div id="healthRing" class="health-ring">
+            <div class="health-ring-inner">
+              <i data-lucide="sprout"></i>
+              <strong id="healthScore">--</strong>
+              <small>HEALTH SCORE</small>
+            </div>
+          </div>
+
+          <div id="healthBadge" class="health-badge">Waiting</div>
+
+          <p id="healthMessage">
+            Waiting for live sensor readings.
+          </p>
+        </article>
+      </section>
+
+      <section class="info-grid">
+        <article class="panel">
+          <div class="panel-header">
+            <div>
+              <span class="panel-label">HARDWARE</span>
+              <h2>Device Information</h2>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <span>Device</span>
+            <strong>AgroSentra 001</strong>
+          </div>
+
+          <div class="info-row">
+            <span>Sensor</span>
+            <strong id="soilStatus">Waiting</strong>
+          </div>
+
+          <div class="info-row">
+            <span>Power Monitor</span>
+            <strong id="powerStatus">Waiting</strong>
+          </div>
+
+          <div class="info-row">
+            <span>Firebase</span>
+            <strong id="firebaseStatus">Connecting</strong>
+          </div>
+
+          <div class="info-row">
+            <span>Wi-Fi RSSI</span>
+            <strong id="rssi">--</strong>
+          </div>
+        </article>
+
+        <article class="panel">
+          <div class="panel-header">
+            <div>
+              <span class="panel-label">CURRENT CONDITIONS</span>
+              <h2>Quick Statistics</h2>
+            </div>
+          </div>
+
+          <div class="info-row">
+            <span>Temperature</span>
+            <strong id="quickTemperature">--</strong>
+          </div>
+
+          <div class="info-row">
+            <span>Moisture</span>
+            <strong id="quickMoisture">--</strong>
+          </div>
+
+          <div class="info-row">
+            <span>Soil pH</span>
+            <strong id="quickPh">--</strong>
+          </div>
+
+          <div class="info-row">
+            <span>Conductivity</span>
+            <strong id="quickEc">--</strong>
+          </div>
+
+          <div class="info-row">
+            <span>System Uptime</span>
+            <strong id="uptime">--</strong>
+          </div>
+        </article>
+      </section>
+
+      <footer>
+        <span>AgroSentra</span>
+        <span>Smart Agriculture Monitoring System</span>
+      </footer>
+    </main>
+  </div>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
