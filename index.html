@@ -10,13 +10,46 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="./styles.css">
+  <link rel="stylesheet" href="./styles.css?v=5">
 
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 
-<body data-theme="dark">
+<body data-theme="dark" class="agrosentra-app">
+
+<div id="agrosentraLoader" class="agrosentra-loader" aria-label="Loading AgroSentra">
+  <div class="loader-bg-orbit orbit-one"></div>
+  <div class="loader-bg-orbit orbit-two"></div>
+
+  <div class="loader-content">
+    <div class="loader-logo-wrap">
+      <div class="loader-logo-glow"></div>
+      <div class="loader-scan-line"></div>
+
+      <img
+        src="./agrosentra-logo.png"
+        alt="AgroSentra"
+        class="loader-logo"
+      >
+    </div>
+
+    <div class="loader-title">AGROSENTRA001</div>
+    <div class="loader-subtitle">Soil Monitoring Dashboard</div>
+
+    <div class="loader-progress-wrap">
+      <div class="loader-progress-track">
+        <div class="loader-progress-bar"></div>
+      </div>
+
+      <div class="loader-status">
+        <span class="loader-status-dot"></span>
+        Initializing monitoring interface
+      </div>
+    </div>
+  </div>
+</div>
+
 
 <div class="ambient ambient-a"></div>
 <div class="ambient ambient-b"></div>
@@ -81,7 +114,7 @@
       <span id="sidebarStatusDot" class="online-dot waiting"></span>
       <div>
         <strong id="sidebarDeviceStatus">Connecting...</strong>
-        <span id="sidebarLastUpdate">Waiting for Firebase</span>
+        <span id="sidebarLastUpdate">Waiting for Firebase · 3s refresh</span>
       </div>
     </div>
   </aside>
@@ -104,9 +137,12 @@
           <span id="topbarLocation">The Waterfront Hotel, Kuching</span>
         </div>
 
-        <div class="connection-chip">
+        <div class="connection-chip live-refresh-chip">
           <span id="topStatusDot" class="online-dot waiting"></span>
-          <span id="topStatusText">Connecting</span>
+          <div>
+            <span id="topStatusText">Connecting</span>
+            <small id="liveRefreshText">Refresh: 3s</small>
+          </div>
         </div>
       </div>
     </header>
@@ -832,6 +868,40 @@
 
 <div class="mobile-overlay" id="mobileOverlay"></div>
 
-<script type="module" src="./app.js"></script>
+
+<script>
+(function () {
+  const loader = document.getElementById("agrosentraLoader");
+  if (!loader) return;
+
+  const startedAt = performance.now();
+  const minimumVisibleTime = 1050;
+
+  function hideLoader() {
+    const elapsed = performance.now() - startedAt;
+    const wait = Math.max(0, minimumVisibleTime - elapsed);
+
+    window.setTimeout(function () {
+      loader.classList.add("loader-exit");
+      document.body.classList.add("app-loaded");
+
+      window.setTimeout(function () {
+        loader.remove();
+      }, 650);
+    }, wait);
+  }
+
+  if (document.readyState === "complete") {
+    hideLoader();
+  } else {
+    window.addEventListener("load", hideLoader, { once: true });
+  }
+
+  /* Safety fallback so the page can never remain trapped behind the loader. */
+  window.setTimeout(hideLoader, 5000);
+})();
+</script>
+
+<script type="module" src="./app.js?v=5"></script>
 </body>
 </html>
