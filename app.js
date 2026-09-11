@@ -3,6 +3,7 @@ import { database } from "./firebase-config.js";
 import {
   ref,
   onValue,
+  remove,
   query,
   orderByChild,
   limitToLast
@@ -615,6 +616,81 @@ document.getElementById("downloadHistoryButton").addEventListener("click", () =>
   URL.revokeObjectURL(url);
 });
 
+
+
+/* =========================================================
+   CLEAR HISTORY
+========================================================= */
+
+const clearHistoryButton = document.getElementById("clearHistoryButton");
+const clearHistoryModal = document.getElementById("clearHistoryModal");
+const cancelClearHistoryButton = document.getElementById("cancelClearHistoryButton");
+const confirmClearHistoryButton = document.getElementById("confirmClearHistoryButton");
+const clearHistoryStatus = document.getElementById("clearHistoryStatus");
+
+function openClearHistoryModal() {
+  clearHistoryStatus.textContent = "";
+  clearHistoryModal.classList.add("open");
+  clearHistoryModal.setAttribute("aria-hidden", "false");
+  document.body.classList.add("modal-open");
+}
+
+function closeClearHistoryModal() {
+  if (confirmClearHistoryButton.disabled) return;
+
+  clearHistoryModal.classList.remove("open");
+  clearHistoryModal.setAttribute("aria-hidden", "true");
+  document.body.classList.remove("modal-open");
+}
+
+clearHistoryButton.addEventListener("click", openClearHistoryModal);
+cancelClearHistoryButton.addEventListener("click", closeClearHistoryModal);
+
+document.querySelectorAll("[data-close-clear-history]").forEach(el => {
+  el.addEventListener("click", closeClearHistoryModal);
+});
+
+document.addEventListener("keydown", event => {
+  if (event.key === "Escape" && clearHistoryModal.classList.contains("open")) {
+    closeClearHistoryModal();
+  }
+});
+
+confirmClearHistoryButton.addEventListener("click", async () => {
+  confirmClearHistoryButton.disabled = true;
+  cancelClearHistoryButton.disabled = true;
+  clearHistoryStatus.className = "confirm-modal-status working";
+  clearHistoryStatus.textContent = "Clearing Firebase history...";
+
+  try {
+    await remove(historyRef);
+
+    historicalSamples = [];
+    renderHistory();
+    renderAnalytics();
+
+    clearHistoryStatus.className = "confirm-modal-status success";
+    clearHistoryStatus.textContent = "History cleared successfully.";
+
+    setTimeout(() => {
+      confirmClearHistoryButton.disabled = false;
+      cancelClearHistoryButton.disabled = false;
+      closeClearHistoryModal();
+    }, 850);
+
+  } catch (error) {
+    console.error("Clear history failed:", error);
+
+    clearHistoryStatus.className = "confirm-modal-status error";
+    clearHistoryStatus.textContent =
+      "Could not clear history. Check Firebase write permissions.";
+
+    confirmClearHistoryButton.disabled = false;
+    cancelClearHistoryButton.disabled = false;
+  }
+});
+
+
 /* =========================================================
    ANALYTICS
 ========================================================= */
@@ -955,6 +1031,113 @@ document.getElementById("useCurrentLocationButton").addEventListener("click", ()
 
 const initialLocation = savedLocation() || DEFAULT_LOCATION;
 applyLocation({ ...initialLocation, source: initialLocation.source || "browser" }, false);
+
+
+
+/* =========================================================
+   DEVICE INFO — INTEGRATED ASSEMBLY ANIMATION
+========================================================= */
+
+const integratedDeviceStage = document.getElementById("integratedDeviceStage");
+const explodeDeviceButton = document.getElementById("explodeDeviceButton");
+const assembleDeviceButton = document.getElementById("assembleDeviceButton");
+const deviceAssemblyState = document.getElementById("deviceAssemblyState");
+const deviceStageStatusText = document.getElementById("deviceStageStatusText");
+
+let deviceAssemblyMode = "assembled";
+let deviceAssemblyTimer = null;
+
+function setDeviceControlState(mode) {
+  explodeDeviceButton.classList.toggle("active", mode === "exploded");
+  assembleDeviceButton.classList.toggle("active", mode === "assembled");
+
+  deviceAssemblyState.textContent =
+    mode === "exploded" ? "EXPLODED" :
+    mode === "assembling" ? "ASSEMBLING" :
+    mode === "exploding" ? "SEPARATING" :
+    "ASSEMBLED";
+}
+
+function clearDeviceAssemblyTimer() {
+  if (deviceAssemblyTimer) {
+    clearTimeout(deviceAssemblyTimer);
+    deviceAssemblyTimer = null;
+  }
+}
+
+function explodeIntegratedDevice() {
+  if (!integratedDeviceStage || deviceAssemblyMode === "exploded" || deviceAssemblyMode === "exploding") {
+    return;
+  }
+
+  clearDeviceAssemblyTimer();
+
+  deviceAssemblyMode = "exploding";
+  setDeviceControlState("exploding");
+  deviceStageStatusText.textContent = "Opening hardware assembly";
+
+  integratedDeviceStage.classList.remove("assembling", "exploded");
+  integratedDeviceStage.classList.add("pre-explode");
+
+  /*
+    First: fade the complete black enclosure out.
+    Then: reveal and separate the internal components.
+  */
+  deviceAssemblyTimer = setTimeout(() => {
+    integratedDeviceStage.classList.remove("pre-explode");
+    integratedDeviceStage.classList.add("exploded");
+
+    deviceAssemblyMode = "exploded";
+    setDeviceControlState("exploded");
+    deviceStageStatusText.textContent =
+      window.matchMedia("(max-width: 820px)").matches
+        ? "Vertical exploded assembly"
+        : "Horizontal exploded assembly";
+  }, 330);
+}
+
+function assembleIntegratedDevice() {
+  if (!integratedDeviceStage || deviceAssemblyMode === "assembled" || deviceAssemblyMode === "assembling") {
+    return;
+  }
+
+  clearDeviceAssemblyTimer();
+
+  deviceAssemblyMode = "assembling";
+  setDeviceControlState("assembling");
+  deviceStageStatusText.textContent = "Returning components to enclosure";
+
+  /*
+    Remove exploded: components animate back into the center.
+    Keep .assembling active so the complete black device remains hidden
+    until all components have collapsed.
+  */
+  integratedDeviceStage.classList.add("assembling");
+  integratedDeviceStage.classList.remove("pre-explode", "exploded");
+
+  deviceAssemblyTimer = setTimeout(() => {
+    integratedDeviceStage.classList.remove("assembling");
+
+    deviceAssemblyMode = "assembled";
+    setDeviceControlState("assembled");
+    deviceStageStatusText.textContent = "Ready to inspect";
+  }, 1180);
+}
+
+if (explodeDeviceButton && assembleDeviceButton && integratedDeviceStage) {
+  explodeDeviceButton.addEventListener("click", explodeIntegratedDevice);
+  assembleDeviceButton.addEventListener("click", assembleIntegratedDevice);
+
+  window.addEventListener("resize", () => {
+    if (deviceAssemblyMode === "exploded") {
+      deviceStageStatusText.textContent =
+        window.matchMedia("(max-width: 820px)").matches
+          ? "Vertical exploded assembly"
+          : "Horizontal exploded assembly";
+    }
+  });
+}
+
 
 /* =========================================================
    FIREBASE LIVE

@@ -174,3 +174,53 @@ The included firmware is:
 `firmware/AgroSentra_Firebase_10s.ino`
 
 The corrected pH scaling is also preserved as `rawPH / 100.0`.
+
+
+## Latest user firmware integrated
+
+This package now uses the user's latest firmware as the source.
+
+Only one firmware setting was changed:
+
+- `FIREBASE_UPLOAD_INTERVAL`: 3000 ms → 10000 ms
+
+The user's existing pH calibration is preserved exactly:
+- pH 4.00 calibration raw = 600
+- pH 7.00 calibration raw = 697
+- two-point interpolation remains unchanged
+
+History remains every 60000 ms (60 seconds).
+
+Firmware:
+`firmware/AgroSentra_Firebase_10s_Latest.ino`
+
+
+## Clear History button
+
+History now includes a **Clear History** button beside **Download CSV**.
+
+The button:
+- opens a confirmation modal
+- deletes only `/devices/agrosentra-001/history`
+- leaves `/devices/agrosentra-001/live` untouched
+- refreshes the History and Analytics views after deletion
+- reports a Firebase permission error if write access is blocked
+
+Firebase Realtime Database write permission is required for the history path.
+
+
+## Integrated Device Info exploded assembly
+
+The separate exploded-view page has been removed.
+
+The animation now lives directly inside **Device Info**:
+
+- Default state shows the complete black AgroSentra001 device.
+- **Explode** first fades/scales the complete unit out.
+- The internal white-outline components then reveal with staggered animation.
+- Desktop/tablet: components separate horizontally.
+- Phone/portrait: components separate vertically.
+- **Assemble** returns all components to the center first.
+- Only after the components collapse does the complete black device fade back in.
+- The large **“One unit. Multiple soil parameters.”** headline remains in the Device Info banner.
+- Existing Firebase, 10-second device cadence, History, Clear History, Analytics, Weather, Settings and theme behavior are preserved.

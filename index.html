@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 
-  <link rel="stylesheet" href="./styles.css?v=8">
+  <link rel="stylesheet" href="./styles.css?v=12">
 
   <script src="https://unpkg.com/lucide@latest"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -392,10 +392,17 @@
           <p>Review recent Firebase history and export the recorded soil dataset as CSV.</p>
         </div>
 
-        <button class="primary-action" id="downloadHistoryButton">
-          <i data-lucide="download"></i>
-          Download CSV
-        </button>
+        <div class="history-actions">
+          <button class="danger-action" id="clearHistoryButton">
+            <i data-lucide="trash-2"></i>
+            Clear History
+          </button>
+
+          <button class="primary-action" id="downloadHistoryButton">
+            <i data-lucide="download"></i>
+            Download CSV
+          </button>
+        </div>
       </div>
 
       <div class="history-stat-grid">
@@ -698,18 +705,120 @@
         <span class="status-pill good">Prototype Model</span>
       </div>
 
-      <article class="device-hero-panel panel">
-        <a class="device-image-wrap device-exploded-link" href="./exploded-view.html" aria-label="Open animated exploded assembly view">
-          <div class="device-image-glow"></div>
-          <img src="./agrosentra001-model-v2.png?v=6" alt="AgroSentra001 soil monitoring device">
-          <div class="device-exploded-cta">
-            <span class="device-exploded-icon"><i data-lucide="scan-line"></i></span>
-            <div><strong>View exploded assembly</strong><small>Animated internal hardware breakdown</small></div>
-            <i data-lucide="arrow-up-right"></i>
-          </div>
-        </a>
+      <article class="device-hero-panel panel integrated-device-panel">
 
-        <div class="device-description">
+        <div class="integrated-device-showcase">
+          <div class="device-showcase-toolbar">
+            <div>
+              <span class="eyebrow">INTERACTIVE HARDWARE VIEW</span>
+              <strong id="deviceAssemblyState">ASSEMBLED</strong>
+            </div>
+
+            <div class="device-assembly-controls">
+              <button class="assembly-control active" id="assembleDeviceButton" type="button">
+                <i data-lucide="package-check"></i>
+                Assemble
+              </button>
+
+              <button class="assembly-control explode-control" id="explodeDeviceButton" type="button">
+                <i data-lucide="scan-line"></i>
+                Explode
+              </button>
+            </div>
+          </div>
+
+          <div class="integrated-device-stage" id="integratedDeviceStage">
+
+            <div class="assembly-guide assembly-guide-horizontal"></div>
+            <div class="assembly-guide assembly-guide-vertical"></div>
+
+            <div class="device-model-layer" id="deviceModelLayer">
+              <div class="device-image-glow"></div>
+              <img
+                src="./agrosentra001-model-v2.png?v=6"
+                alt="AgroSentra001 soil monitoring device"
+                class="integrated-device-model"
+              >
+
+              <div class="assembled-caption">
+                <span class="assembled-caption-dot"></span>
+                Complete AgroSentra001 assembly
+              </div>
+            </div>
+
+            <div class="integrated-parts-layer" id="integratedPartsLayer">
+
+              <div
+                class="integrated-part part-lcd"
+                style="--dx:-290px; --dy:-270px; --delay:.02s; --part-scale:.80;"
+              >
+                <span class="integrated-part-number">01</span>
+                <img src="./exploded-lcd.png" alt="Grove RGB LCD outline">
+                <div class="integrated-part-label">
+                  <strong>Grove RGB LCD</strong>
+                  <small>Display layer</small>
+                </div>
+              </div>
+
+              <div
+                class="integrated-part part-shield"
+                style="--dx:-145px; --dy:-135px; --delay:.10s; --part-scale:.84;"
+              >
+                <span class="integrated-part-number">02</span>
+                <img src="./exploded-grove-shield.png" alt="Grove Shield outline">
+                <div class="integrated-part-label">
+                  <strong>Grove Shield</strong>
+                  <small>Interconnect layer</small>
+                </div>
+              </div>
+
+              <div
+                class="integrated-part part-esp32"
+                style="--dx:0px; --dy:0px; --delay:.18s; --part-scale:.90;"
+              >
+                <span class="integrated-part-number">03</span>
+                <img src="./exploded-esp32.png" alt="ESP32 controller board outline">
+                <div class="integrated-part-label">
+                  <strong>ESP32 Controller</strong>
+                  <small>Control core</small>
+                </div>
+              </div>
+
+              <div
+                class="integrated-part part-max485"
+                style="--dx:145px; --dy:135px; --delay:.26s; --part-scale:.76;"
+              >
+                <span class="integrated-part-number">04</span>
+                <img src="./exploded-max485.png" alt="MAX485 interface outline">
+                <div class="integrated-part-label">
+                  <strong>MAX485</strong>
+                  <small>RS485 interface</small>
+                </div>
+              </div>
+
+              <div
+                class="integrated-part part-ina219"
+                style="--dx:290px; --dy:270px; --delay:.34s; --part-scale:.76;"
+              >
+                <span class="integrated-part-number">05</span>
+                <img src="./exploded-ina219.png" alt="INA219 current sensor outline">
+                <div class="integrated-part-label">
+                  <strong>INA219</strong>
+                  <small>Power monitoring</small>
+                </div>
+              </div>
+
+            </div>
+
+            <div class="device-stage-status">
+              <span></span>
+              <b id="deviceStageStatusText">Ready to inspect</b>
+            </div>
+
+          </div>
+        </div>
+
+        <div class="device-description integrated-device-description">
           <span class="eyebrow">SOIL MONITORING UNIT</span>
           <h3>One unit. Multiple soil parameters.</h3>
           <p>
@@ -725,7 +834,13 @@
             <div><i data-lucide="monitor"></i><span>Local Display</span><strong>16 × 2 RGB LCD</strong></div>
             <div><i data-lucide="cloud"></i><span>Remote Data</span><strong>Firebase RTDB</strong></div>
           </div>
+
+          <div class="assembly-order-strip">
+            <span>INTERNAL STACK</span>
+            <strong>LCD → Grove Shield → ESP32 → MAX485 → INA219</strong>
+          </div>
         </div>
+
       </article>
 
       <div class="device-detail-grid">
@@ -864,6 +979,41 @@
       </div>
     </section>
 
+
+    <div class="confirm-modal" id="clearHistoryModal" aria-hidden="true">
+      <div class="confirm-modal-backdrop" data-close-clear-history></div>
+
+      <div class="confirm-modal-card" role="dialog" aria-modal="true" aria-labelledby="clearHistoryTitle">
+        <div class="confirm-modal-icon">
+          <i data-lucide="triangle-alert"></i>
+        </div>
+
+        <div class="confirm-modal-copy">
+          <span class="eyebrow">FIREBASE HISTORY</span>
+          <h3 id="clearHistoryTitle">Clear all recorded history?</h3>
+          <p>
+            This permanently deletes all records under
+            <strong>/devices/agrosentra-001/history</strong>.
+            Live sensor data will not be affected.
+          </p>
+        </div>
+
+        <div class="confirm-modal-actions">
+          <button class="secondary-action" id="cancelClearHistoryButton">
+            Cancel
+          </button>
+
+          <button class="danger-action strong" id="confirmClearHistoryButton">
+            <i data-lucide="trash-2"></i>
+            Yes, clear history
+          </button>
+        </div>
+
+        <div class="confirm-modal-status" id="clearHistoryStatus"></div>
+      </div>
+    </div>
+
+
     <footer class="site-footer">
       <span>AgroSentra001</span>
       <span>Soil Monitoring Dashboard</span>
@@ -907,6 +1057,6 @@
 })();
 </script>
 
-<script type="module" src="./app.js?v=9"></script>
+<script type="module" src="./app.js?v=12"></script>
 </body>
 </html>
