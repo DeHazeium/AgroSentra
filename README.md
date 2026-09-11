@@ -132,3 +132,7 @@ Changes:
 - no orbit rings, scanning streaks, or busy background effects
 - loading screen automatically follows the theme previously saved by the user
 - supports Agro Dark, Midnight, and Light themes before the main dashboard finishes loading
+
+
+## Exploded assembly page
+Clicking the AgroSentra001 product image in Device Info opens `exploded-view.html`. The page uses only the supplied white-outline assets, in this order: LCD, Grove Shield, ESP32, MAX485, INA219. The colored image was used only as an arrangement reference.
