@@ -136,3 +136,41 @@ Changes:
 
 ## Animated exploded assembly
 Clicking the device image in Device Info opens `exploded-view.html`. The five white-outline internal modules start collapsed at the center, then automatically separate vertically into an exploded engineering view. Users can Assemble, Explode, or Replay the animation.
+
+
+## Responsive exploded assembly v4
+
+The exploded assembly animation is now orientation-aware:
+
+- Desktop and tablet landscape: components separate horizontally from left to right.
+- Phones and narrow portrait screens: components separate vertically from top to bottom.
+- Assemble, Explode, and Replay controls are preserved.
+- The layout switches automatically at 700 px viewport width.
+- The desktop scene is compressed to fit common laptop screens more comfortably.
+
+
+## Firebase usage optimization — 10 second live update
+
+This build reduces Firebase traffic.
+
+### Device
+The ESP32 live upload interval is now:
+
+`10000 ms` = one live upload every 10 seconds.
+
+History remains at:
+
+`60000 ms` = one history sample every 60 seconds.
+
+### Website
+The website no longer performs an extra Firebase `get()` request every few seconds.
+
+It now uses Firebase Realtime Database `onValue()` only. This means the browser receives a live update when the ESP32 writes new data, instead of repeatedly downloading the same value when nothing has changed.
+
+This is more efficient than polling Firebase every 10 seconds.
+
+The included firmware is:
+
+`firmware/AgroSentra_Firebase_10s.ino`
+
+The corrected pH scaling is also preserved as `rawPH / 100.0`.

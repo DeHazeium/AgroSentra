@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./exploded-view.css?v=3">
+  <link rel="stylesheet" href="./exploded-view.css?v=4">
   <script>
   (function(){
     try {
@@ -45,47 +45,43 @@
       </div>
 
       <div id="scene" class="scene assembled">
-        <div class="axis"></div>
+        <div class="axis axis-desktop"></div>
+        <div class="axis axis-mobile"></div>
 
-        <div class="part p1" style="--y:-420px; --delay:.08s; --s:.92;">
+        <div class="part p1" style="--x:-400px; --y:-340px; --delay:.06s; --s:.90;">
           <span class="num">01</span>
           <img src="./exploded-lcd.png" alt="Grove RGB LCD">
-          <div class="label left"><b>Grove RGB LCD</b><small>Display layer</small></div>
-          <div class="leader leftline"></div>
+          <div class="label"><b>Grove RGB LCD</b><small>Display layer</small></div>
         </div>
 
-        <div class="part p2" style="--y:-205px; --delay:.18s; --s:1.0;">
+        <div class="part p2" style="--x:-200px; --y:-170px; --delay:.16s; --s:.96;">
           <span class="num">02</span>
           <img src="./exploded-grove-shield.png" alt="Grove Shield">
-          <div class="label right"><b>Grove Shield</b><small>Interconnect layer</small></div>
-          <div class="leader rightline"></div>
+          <div class="label"><b>Grove Shield</b><small>Interconnect layer</small></div>
         </div>
 
-        <div class="part p3" style="--y:0px; --delay:.28s; --s:1.0;">
+        <div class="part p3" style="--x:0px; --y:0px; --delay:.26s; --s:1.0;">
           <span class="num">03</span>
           <img src="./exploded-esp32.png" alt="ESP32 controller">
-          <div class="label left"><b>ESP32 Controller</b><small>Control core</small></div>
-          <div class="leader leftline"></div>
+          <div class="label"><b>ESP32 Controller</b><small>Control core</small></div>
         </div>
 
-        <div class="part p4" style="--y:215px; --delay:.38s; --s:.88;">
+        <div class="part p4" style="--x:200px; --y:170px; --delay:.36s; --s:.88;">
           <span class="num">04</span>
           <img src="./exploded-max485.png" alt="MAX485 interface">
-          <div class="label right"><b>MAX485</b><small>RS485 communication</small></div>
-          <div class="leader rightline"></div>
+          <div class="label"><b>MAX485</b><small>RS485 communication</small></div>
         </div>
 
-        <div class="part p5" style="--y:410px; --delay:.48s; --s:.88;">
+        <div class="part p5" style="--x:400px; --y:340px; --delay:.46s; --s:.88;">
           <span class="num">05</span>
           <img src="./exploded-ina219.png" alt="INA219 current sensor">
-          <div class="label left"><b>INA219</b><small>Power monitoring</small></div>
-          <div class="leader leftline"></div>
+          <div class="label"><b>INA219</b><small>Power monitoring</small></div>
         </div>
       </div>
 
-      <div class="hint">The assembly automatically separates on load. Use <b>Assemble</b> to bring the hardware back together.</div>
+      <div class="hint">Desktop: components separate horizontally. Phone: components separate vertically. Use <b>Assemble</b> or <b>Replay</b> anytime.</div>The assembly automatically separates on load. Use <b>Assemble</b> to bring the hardware back together.</div>
     </section>
   </main>
-  <script src="./exploded-view.js?v=3"></script>
+  <script src="./exploded-view.js?v=4"></script>
 </body>
 </html>

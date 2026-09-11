@@ -3,7 +3,6 @@ import { database } from "./firebase-config.js";
 import {
   ref,
   onValue,
-  get,
   query,
   orderByChild,
   limitToLast
@@ -165,10 +164,8 @@ let historicalSamples = [];
 let environmentalContext = null;
 let monitoringLocation = null;
 let lastFirebaseUpdate = 0;
-let lastFirebasePoll = 0;
 let externalRefreshTimer = null;
 
-const LIVE_REFRESH_INTERVAL_MS = 3000;
 
 const LOCATION_KEY = "agrosentra-monitoring-location-v2";
 const EXTERNAL_REFRESH_MS = 10 * 60 * 1000;
@@ -477,12 +474,12 @@ function setConnection(online) {
   if (online) {
     lastFirebaseUpdate = Date.now();
     document.getElementById("sidebarLastUpdate").textContent =
-      `Updated ${new Date().toLocaleTimeString()} · refresh 3s`;
+      `Updated ${new Date().toLocaleTimeString()} · device 10s`;
   }
 }
 
 setInterval(() => {
-  if (lastFirebaseUpdate && Date.now() - lastFirebaseUpdate > 15000) {
+  if (lastFirebaseUpdate && Date.now() - lastFirebaseUpdate > 30000) {
     setConnection(false);
   }
 }, 3000);
@@ -969,7 +966,6 @@ function applyLiveData(data, source = "realtime") {
   if (!data) return;
 
   currentLiveData = data;
-  lastFirebasePoll = Date.now();
 
   const probeLocation = firebaseLocation(data);
 
@@ -992,10 +988,7 @@ function applyLiveData(data, source = "realtime") {
 
   const refreshText = document.getElementById("liveRefreshText");
   if (refreshText) {
-    refreshText.textContent =
-      source === "poll"
-        ? `Checked ${new Date().toLocaleTimeString([], {hour:"2-digit", minute:"2-digit", second:"2-digit"})}`
-        : "Live · 3s refresh";
+    refreshText.textContent = "Live push · device 10s";
   }
 }
 
@@ -1016,37 +1009,7 @@ onValue(
   }
 );
 
-/*
-  Guaranteed 3-second refresh.
-  Firebase onValue() remains active for instant push updates, while this
-  polling check guarantees that the dashboard checks the latest RTDB value
-  every 3000 ms even when values remain unchanged.
-*/
-async function refreshLiveDataEvery3Seconds() {
-  try {
-    const snapshot = await get(liveRef);
 
-    if (!snapshot.exists()) {
-      document.getElementById("firebaseStatus").textContent = "No Data";
-      return;
-    }
-
-    applyLiveData(snapshot.val(), "poll");
-
-  } catch (error) {
-    console.warn("3-second Firebase refresh failed:", error);
-
-    const refreshText = document.getElementById("liveRefreshText");
-    if (refreshText) {
-      refreshText.textContent = "Refresh retrying...";
-    }
-  }
-}
-
-setInterval(
-  refreshLiveDataEvery3Seconds,
-  LIVE_REFRESH_INTERVAL_MS
-);
 
 /* =========================================================
    FIREBASE HISTORY
