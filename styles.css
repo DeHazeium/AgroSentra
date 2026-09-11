@@ -2976,12 +2976,12 @@ html[data-loader-theme="light"] .premium-loader-line span {
 }
 
 
-/* Device Info -> exploded assembly */
-.device-exploded-link{position:relative;text-decoration:none;color:inherit;cursor:pointer;border-radius:16px;transition:transform .25s ease}
-.device-exploded-link:hover{transform:translateY(-3px)}
-.device-exploded-link:hover img{transform:translateY(-4px) scale(1.012)}
-.device-exploded-cta{position:absolute;z-index:7;left:50%;bottom:14px;transform:translateX(-50%);width:min(320px,calc(100% - 28px));min-height:56px;padding:9px 11px;border-radius:12px;display:grid;grid-template-columns:34px 1fr 18px;align-items:center;gap:9px;text-align:left;background:color-mix(in srgb,var(--surface) 86%,transparent);backdrop-filter:blur(16px);border:1px solid color-mix(in srgb,var(--green) 18%,var(--border));box-shadow:0 18px 40px rgba(0,0,0,.18)}
-.device-exploded-icon{width:34px;height:34px;border-radius:9px;display:grid;place-items:center;color:var(--green);background:color-mix(in srgb,var(--green) 7%,transparent);border:1px solid color-mix(in srgb,var(--green) 12%,transparent)}
-.device-exploded-cta svg{width:15px;height:15px}.device-exploded-cta>svg{color:var(--muted-2)}
-.device-exploded-cta strong,.device-exploded-cta small{display:block}.device-exploded-cta strong{font-size:10px;color:var(--text)}.device-exploded-cta small{margin-top:3px;font-size:8px;color:var(--muted)}
+/* Device -> animated exploded view */
+.device-exploded-link { text-decoration:none; color:inherit; cursor:pointer; border-radius:16px; }
+.device-exploded-link img { transition: transform .35s cubic-bezier(.2,.8,.2,1), filter .35s ease; }
+.device-exploded-link:hover img { transform: translateY(-5px) scale(1.012); filter: drop-shadow(0 32px 44px rgba(0,0,0,.38)) drop-shadow(0 0 24px rgba(69,242,139,.11)); }
+.device-exploded-cta { position:absolute; z-index:8; left:50%; bottom:12px; transform:translateX(-50%); width:min(330px, calc(100% - 26px)); min-height:58px; padding:9px 11px; border-radius:13px; display:grid; grid-template-columns:36px 1fr 18px; align-items:center; gap:9px; text-align:left; background:color-mix(in srgb,var(--surface) 84%,transparent); border:1px solid color-mix(in srgb,var(--green) 18%,var(--border)); backdrop-filter:blur(18px); box-shadow:0 18px 36px rgba(0,0,0,.2); }
+.device-exploded-icon { width:36px; height:36px; display:grid; place-items:center; border-radius:10px; color:var(--green); background:color-mix(in srgb,var(--green) 8%,transparent); border:1px solid color-mix(in srgb,var(--green) 12%,transparent); }
+.device-exploded-icon svg,.device-exploded-cta>svg{width:15px;height:15px}.device-exploded-cta>svg{color:var(--muted-2)}
+.device-exploded-cta strong,.device-exploded-cta small{display:block}.device-exploded-cta strong{font-size:11px}.device-exploded-cta small{margin-top:3px;color:var(--muted);font-size:9px}
 @media(max-width:580px){.device-exploded-cta{position:relative;left:auto;bottom:auto;transform:none;margin-top:10px;width:100%}}

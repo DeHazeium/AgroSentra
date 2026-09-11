@@ -1,27 +1,91 @@
 <!DOCTYPE html>
-<html lang="en" data-theme="dark">
+<html lang="en">
 <head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1.0">
-<meta name="theme-color" content="#03080c"><title>AgroSentra001 | Exploded Assembly</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-<link rel="stylesheet" href="./exploded-view.css?v=1">
-<script>(function(){try{const t=localStorage.getItem('agrosentra-theme-v2')||'dark';document.documentElement.dataset.theme=['dark','midnight','light'].includes(t)?t:'dark'}catch(e){}})();</script>
-</head><body>
-<header class="topbar"><a href="./index.html#device" class="back">← <span>Back to Device Info</span></a><img src="./agrosentra-logo.png" class="brand" alt="AgroSentra"><div></div></header>
-<main>
-<section class="intro"><span>AGROSENTRA001 · INTERNAL ARCHITECTURE</span><h1>Exploded assembly</h1><p>The internal electronics stack of AgroSentra001, shown in assembly order using the white-outline component views.</p></section>
-<section class="stack">
-  <article class="layer"><div class="num">01</div><div class="visual"><img src="./exploded-lcd.png" alt="Grove RGB LCD"></div><div class="copy"><span>DISPLAY LAYER</span><h2>Grove RGB LCD</h2><p>Local two-line display for live readings and device feedback.</p></div></article>
-  <div class="join"><i></i></div>
-  <article class="layer reverse"><div class="num">02</div><div class="copy"><span>INTERCONNECT LAYER</span><h2>Grove Shield</h2><p>Organizes the Grove connections between the ESP32 and peripheral modules.</p></div><div class="visual"><img src="./exploded-grove-shield.png" alt="Grove Shield"></div></article>
-  <div class="join"><i></i></div>
-  <article class="layer"><div class="num">03</div><div class="visual"><img src="./exploded-esp32.png" alt="ESP32 controller"></div><div class="copy"><span>CONTROL LAYER</span><h2>ESP32 Controller</h2><p>Reads the sensors, drives the display and sends live measurements to Firebase.</p></div></article>
-  <div class="join"><i></i></div>
-  <article class="layer reverse"><div class="num">04</div><div class="copy"><span>COMMUNICATION LAYER</span><h2>MAX485</h2><p>RS485 transceiver between the ESP32 UART and the multi-parameter soil probe.</p></div><div class="visual"><img src="./exploded-max485.png" alt="MAX485 module"></div></article>
-  <div class="join"><i></i></div>
-  <article class="layer"><div class="num">05</div><div class="visual"><img src="./exploded-ina219.png" alt="INA219 current sensor"></div><div class="copy"><span>POWER MONITORING LAYER</span><h2>INA219</h2><p>Measures device operating voltage and current for power monitoring.</p></div></article>
-</section>
-<section class="summary"><div><span>STACK ORDER</span><strong>LCD → Grove Shield → ESP32 → MAX485 → INA219</strong></div><div><span>MODEL</span><strong>AgroSentra001</strong></div><div><span>SYSTEM</span><strong>Soil Monitoring System</strong></div></section>
-<footer><span>AgroSentra001</span><span>Exploded Assembly View</span></footer>
-</main></body></html>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#03080c">
+  <title>AgroSentra001 | Exploded Assembly</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./exploded-view.css?v=3">
+  <script>
+  (function(){
+    try {
+      const t=localStorage.getItem('agrosentra-theme-v2')||'dark';
+      document.documentElement.dataset.theme=['dark','midnight','light'].includes(t)?t:'dark';
+    } catch(e){document.documentElement.dataset.theme='dark';}
+  })();
+  </script>
+</head>
+<body>
+  <header class="topbar">
+    <a class="back" href="./index.html#device">← Back to Device Info</a>
+    <img src="./agrosentra-logo.png" class="brand" alt="AgroSentra">
+    <div class="actions">
+      <button id="toggleAssembly" type="button">Assemble</button>
+      <button id="replay" type="button">Replay</button>
+    </div>
+  </header>
+
+  <main>
+    <section class="intro">
+      <span>AGROSENTRA001 · INTERNAL HARDWARE</span>
+      <h1>Exploded assembly</h1>
+      <p>The internal modules separate from a compact stack into an engineering-style exploded view.</p>
+    </section>
+
+    <section class="exploded-card">
+      <div class="diagram-head">
+        <div>
+          <span>ASSEMBLY ORDER</span>
+          <strong>LCD → Grove Shield → ESP32 → MAX485 → INA219</strong>
+        </div>
+        <div class="state"><i></i><b id="stateText">Separating components</b></div>
+      </div>
+
+      <div id="scene" class="scene assembled">
+        <div class="axis"></div>
+
+        <div class="part p1" style="--y:-420px; --delay:.08s; --s:.92;">
+          <span class="num">01</span>
+          <img src="./exploded-lcd.png" alt="Grove RGB LCD">
+          <div class="label left"><b>Grove RGB LCD</b><small>Display layer</small></div>
+          <div class="leader leftline"></div>
+        </div>
+
+        <div class="part p2" style="--y:-205px; --delay:.18s; --s:1.0;">
+          <span class="num">02</span>
+          <img src="./exploded-grove-shield.png" alt="Grove Shield">
+          <div class="label right"><b>Grove Shield</b><small>Interconnect layer</small></div>
+          <div class="leader rightline"></div>
+        </div>
+
+        <div class="part p3" style="--y:0px; --delay:.28s; --s:1.0;">
+          <span class="num">03</span>
+          <img src="./exploded-esp32.png" alt="ESP32 controller">
+          <div class="label left"><b>ESP32 Controller</b><small>Control core</small></div>
+          <div class="leader leftline"></div>
+        </div>
+
+        <div class="part p4" style="--y:215px; --delay:.38s; --s:.88;">
+          <span class="num">04</span>
+          <img src="./exploded-max485.png" alt="MAX485 interface">
+          <div class="label right"><b>MAX485</b><small>RS485 communication</small></div>
+          <div class="leader rightline"></div>
+        </div>
+
+        <div class="part p5" style="--y:410px; --delay:.48s; --s:.88;">
+          <span class="num">05</span>
+          <img src="./exploded-ina219.png" alt="INA219 current sensor">
+          <div class="label left"><b>INA219</b><small>Power monitoring</small></div>
+          <div class="leader leftline"></div>
+        </div>
+      </div>
+
+      <div class="hint">The assembly automatically separates on load. Use <b>Assemble</b> to bring the hardware back together.</div>
+    </section>
+  </main>
+  <script src="./exploded-view.js?v=3"></script>
+</body>
+</html>
