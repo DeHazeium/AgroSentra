@@ -145,7 +145,7 @@ b,strong { font-weight:550; }
 .station-top .eyebrow { color:inherit; opacity:.7; font-size:8px; }
 .station-number { font-family:monospace; font-size:10px; opacity:.6; }
 .station-image { position:relative; flex:1; display:grid; place-items:center; min-height:219px; }
-.station-image img { position:relative; width:222px; max-width:100%; height:240px; object-fit:contain; transform:rotate(-7deg); filter:drop-shadow(8px 15px 8px rgba(48,56,28,.1)); }
+.station-image img { position:relative; width:222px; max-width:100%; height:240px; object-fit:contain; mix-blend-mode:multiply; border-radius:6px; }
 .station-cross { position:absolute; font-size:15px; opacity:.3; font-family:monospace; }
 .cross-one { left:0; top:30px; }.cross-two { right:0; bottom:30px; }
 .station-caption { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:8px; }
@@ -250,7 +250,9 @@ td { font-variant-numeric:tabular-nums; }
 .integrated-device-stage { height:420px; position:relative; overflow:hidden; background:var(--surface-2); }
 .device-model-layer,.integrated-parts-layer { position:absolute; inset:0; }
 .device-model-layer { display:grid; place-items:center; opacity:1; transition:opacity .3s,transform .5s; z-index:3; }
-.integrated-device-model { width:340px; height:330px; object-fit:contain; }
+.integrated-device-model { width:340px; height:330px; object-fit:contain; mix-blend-mode:multiply; border-radius:6px; }
+html[data-theme="dark"] .station-image img,html[data-theme="midnight"] .station-image img,
+html[data-theme="dark"] .integrated-device-model,html[data-theme="midnight"] .integrated-device-model { mix-blend-mode:normal; background:#fff; }
 .assembled-caption { position:absolute; bottom:25px; font-size:10px; color:var(--muted); }
 .device-stage-status { position:absolute; bottom:12px; right:16px; font-size:9px; color:var(--muted); }
 .device-stage-status b { font-weight:400; }.device-stage-status span { display:none; }
