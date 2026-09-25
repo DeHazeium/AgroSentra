@@ -4,6 +4,9 @@ const toggle = document.getElementById("toggleAssembly");
 const state = document.getElementById("stateText");
 
 let exploded = true;
+let settleTimer;
+let replayTimer;
+let transitionToken = 0;
 
 function layoutName() {
   return window.matchMedia("(max-width: 700px)").matches
@@ -16,6 +19,9 @@ function setState(text) {
 }
 
 function explode() {
+  clearTimeout(settleTimer);
+  clearTimeout(replayTimer);
+  const token = ++transitionToken;
   exploded = true;
   scene.classList.add("assembled");
   setState("Separating components");
@@ -23,16 +29,19 @@ function explode() {
 
   requestAnimationFrame(() => {
     requestAnimationFrame(() => {
-      scene.classList.remove("assembled");
+      if (token === transitionToken) scene.classList.remove("assembled");
     });
   });
 
-  setTimeout(() => {
+  settleTimer = setTimeout(() => {
     setState("Exploded view active");
   }, 1450);
 }
 
 function assemble() {
+  ++transitionToken;
+  clearTimeout(settleTimer);
+  clearTimeout(replayTimer);
   exploded = false;
   scene.classList.add("assembled");
   setState("Assembly collapsed");
@@ -41,14 +50,17 @@ function assemble() {
 
 window.addEventListener(
   "load",
-  () => setTimeout(explode, 260),
+  () => { replayTimer = setTimeout(explode, 260); },
   { once: true }
 );
 
 replay.addEventListener("click", () => {
+  ++transitionToken;
+  clearTimeout(settleTimer);
+  clearTimeout(replayTimer);
   scene.classList.add("assembled");
   setState("Resetting assembly");
-  setTimeout(explode, 300);
+  replayTimer = setTimeout(explode, 300);
 });
 
 toggle.addEventListener("click", () => {

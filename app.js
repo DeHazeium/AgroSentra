@@ -1,14 +1,3 @@
-import { database } from "./firebase-config.js";
-
-import {
-  ref,
-  onValue,
-  remove,
-  query,
-  orderByChild,
-  limitToLast
-} from "https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js";
-
 import {
   analyseSoil,
   isFiniteNumber
@@ -22,6 +11,17 @@ import {
 
 lucide.createIcons();
 
+function savedPreference(key) { try { return localStorage.getItem(key); } catch (_) { return null; } }
+function storePreference(key, value) { try { localStorage.setItem(key, value); } catch (_) {} }
+let noticeTimer;
+function showNotice(message) {
+  let notice = document.getElementById('notice');
+  if (!notice) { notice = document.createElement('div'); notice.id = 'notice'; notice.className = 'notice'; notice.setAttribute('role', 'status'); document.body.appendChild(notice); }
+  notice.textContent = message; notice.hidden = false; clearTimeout(noticeTimer);
+  noticeTimer = setTimeout(() => { notice.hidden = true; }, 5000);
+}
+document.getElementById('todayDate').textContent = new Date().toLocaleDateString(undefined, {day:'numeric', month:'short', year:'numeric'});
+
 /* =========================================================
    BASIC HELPERS
 ========================================================= */
@@ -31,7 +31,7 @@ function validNumber(value) {
 }
 
 function fmt(value, digits = 1) {
-  return validNumber(value) ? Number(value).toFixed(digits) : "--";
+  return validNumber(value) ? Number(value).toFixed(digits) : "—";
 }
 
 function formatUptime(ms) {
@@ -47,8 +47,10 @@ function formatUptime(ms) {
   return `${minutes}m`;
 }
 
+function chartNumber(value) { return validNumber(value) ? Number(value) : null; }
+
 function average(values) {
-  const clean = values.map(Number).filter(Number.isFinite);
+  const clean = values.filter(validNumber).map(Number);
   if (!clean.length) return null;
   return clean.reduce((a,b) => a + b, 0) / clean.length;
 }
@@ -72,13 +74,9 @@ function clearStateClasses(el) {
 ========================================================= */
 
 const viewMeta = {
-  dashboard: ["AGROSENTRA001", "Dashboard"],
-  live: ["REAL-TIME MONITORING", "Live Soil Data"],
-  history: ["RECORDED MEASUREMENTS", "History"],
-  analytics: ["LOCAL INTELLIGENT ANALYTICS", "AI Analytics"],
-  weather: ["ENVIRONMENTAL CONTEXT", "External Weather"],
-  device: ["HARDWARE MODEL", "Device Info"],
-  settings: ["PREFERENCES", "Settings"]
+  dashboard: ['Workspace', 'Overview'], live: ['Workspace', 'Live readings'],
+  history: ['Workspace', 'History'], analytics: ['Workspace', 'Soil insights'],
+  weather: ['Workspace', 'Weather'], device: ['Workspace', 'Device'], settings: ['Workspace', 'Settings']
 };
 
 const navItems = [...document.querySelectorAll("[data-view]")];
@@ -91,6 +89,7 @@ function switchView(name, updateHash = true) {
 
   navItems.forEach(btn => {
     btn.classList.toggle("active", btn.dataset.view === name);
+    if (btn.dataset.view === name) btn.setAttribute("aria-current", "page"); else btn.removeAttribute("aria-current");
   });
 
   views.forEach(view => {
@@ -99,16 +98,19 @@ function switchView(name, updateHash = true) {
 
   pageEyebrow.textContent = viewMeta[name][0];
   pageTitle.textContent = viewMeta[name][1];
+  document.title = `${viewMeta[name][1]} — AgroSentra`;
+  document.getElementById("mobileMenuButton").setAttribute("aria-expanded", "false");
 
   if (updateHash) {
-    history.replaceState(null, "", `#${name}`);
+    history.pushState(null, "", `#${name}`);
   }
 
   document.body.classList.remove("menu-open");
-  window.scrollTo({ top: 0, behavior: "smooth" });
+  window.scrollTo({ top: 0, behavior: "instant" });
 
   // Chart.js may need a resize after a hidden view becomes visible.
   setTimeout(() => {
+    if (name === "dashboard") overviewChart.resize();
     if (name === "live") sensorChart.resize();
     if (name === "history") historyChart.resize();
   }, 80);
@@ -124,37 +126,43 @@ document.querySelectorAll("[data-jump]").forEach(btn => {
 
 const initialView = location.hash.replace("#","") || "dashboard";
 switchView(initialView, false);
+window.addEventListener("hashchange", () => { if (location.hash !== '#mainContent') switchView(location.hash.slice(1), false); });
 
 document.getElementById("mobileMenuButton").addEventListener("click", () => {
-  document.body.classList.toggle("menu-open");
+  const open = document.body.classList.toggle("menu-open");
+  document.getElementById("mobileMenuButton").setAttribute("aria-expanded", String(open));
+  if (open) document.querySelector(".nav-item.active").focus();
 });
 
-document.getElementById("mobileOverlay").addEventListener("click", () => {
-  document.body.classList.remove("menu-open");
-});
+function closeMenu() { document.body.classList.remove('menu-open'); document.getElementById('mobileMenuButton').setAttribute('aria-expanded','false'); }
+document.getElementById('mobileOverlay').addEventListener('click', closeMenu);
+document.addEventListener('keydown', event => { if (event.key === 'Escape' && document.body.classList.contains('menu-open')) { closeMenu(); document.getElementById('mobileMenuButton').focus(); } });
 
 /* =========================================================
    THEME
 ========================================================= */
 
-const THEME_KEY = "agrosentra-theme-v2";
+const THEME_KEY = "agrosentra-theme-v3";
 
 function applyTheme(theme) {
-  if (!["dark","midnight","light"].includes(theme)) theme = "dark";
+  if (!["dark","midnight","light"].includes(theme)) theme = "light";
 
   document.body.dataset.theme = theme;
-  localStorage.setItem(THEME_KEY, theme);
+  document.documentElement.dataset.theme = theme;
+  storePreference(THEME_KEY, theme);
+  document.querySelector("meta[name=theme-color]").content = getComputedStyle(document.documentElement).getPropertyValue("--bg").trim();
 
   document.querySelectorAll("[data-theme-choice]").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.themeChoice === theme);
+    btn.setAttribute("aria-pressed", String(btn.dataset.themeChoice === theme));
   });
 }
 
 document.querySelectorAll("[data-theme-choice]").forEach(btn => {
-  btn.addEventListener("click", () => applyTheme(btn.dataset.themeChoice));
+  btn.addEventListener("click", () => { applyTheme(btn.dataset.themeChoice); recolorCharts(); });
 });
 
-applyTheme(localStorage.getItem(THEME_KEY) || "dark");
+applyTheme(savedPreference(THEME_KEY) || "light");
 
 /* =========================================================
    STATE
@@ -182,6 +190,12 @@ const DEFAULT_LOCATION = {
    LIVE CHART
 ========================================================= */
 
+Chart.defaults.font.family = "'DM Sans', Arial, sans-serif";
+Chart.defaults.font.size = 11;
+Chart.defaults.color = '#70796b';
+Chart.defaults.plugins.tooltip.backgroundColor = '#293324';
+Chart.defaults.plugins.tooltip.padding = 12;
+Chart.defaults.plugins.tooltip.cornerRadius = 4;
 const sensorChart = new Chart(
   document.getElementById("sensorChart"),
   {
@@ -192,8 +206,8 @@ const sensorChart = new Chart(
         {
           label: "Temperature °C",
           data: [],
-          borderColor: "#45f28b",
-          backgroundColor: "#45f28b",
+          borderColor: "#6a8057",
+          backgroundColor: "#6a8057",
           borderWidth: 2,
           pointRadius: 0,
           tension: .36
@@ -201,8 +215,8 @@ const sensorChart = new Chart(
         {
           label: "Moisture %",
           data: [],
-          borderColor: "#45a7ff",
-          backgroundColor: "#45a7ff",
+          borderColor: "#788d9b",
+          backgroundColor: "#788d9b",
           borderWidth: 2,
           pointRadius: 0,
           tension: .36
@@ -210,8 +224,8 @@ const sensorChart = new Chart(
         {
           label: "pH",
           data: [],
-          borderColor: "#a874ff",
-          backgroundColor: "#a874ff",
+          borderColor: "#aa8b65",
+          backgroundColor: "#aa8b65",
           borderWidth: 2,
           pointRadius: 0,
           tension: .36
@@ -231,18 +245,18 @@ const sensorChart = new Chart(
             boxWidth: 7,
             padding: 17,
             color: "#718692",
-            font: { size: 9 }
+            font: { size: 10 }
           }
         }
       },
       scales: {
         x: {
           grid: { color: "rgba(127,146,158,.08)" },
-          ticks: { color: "#647985", maxTicksLimit: 7, font: { size: 8 } }
+          ticks: { color: "#647985", maxTicksLimit: 7, font: { size: 10 } }
         },
         y: {
           grid: { color: "rgba(127,146,158,.08)" },
-          ticks: { color: "#647985", font: { size: 8 } }
+          ticks: { color: "#647985", font: { size: 10 } }
         }
       }
     }
@@ -264,16 +278,16 @@ function addLiveChartReading(data) {
   lastLiveChartTimestamp = key;
 
   sensorChart.data.labels.push(
-    new Date().toLocaleTimeString([], {
+    new Date(tsMs(data) || Date.now()).toLocaleTimeString([], {
       hour: "2-digit",
       minute: "2-digit",
       second: "2-digit"
     })
   );
 
-  sensorChart.data.datasets[0].data.push(Number(data.temperature));
-  sensorChart.data.datasets[1].data.push(Number(data.moisture));
-  sensorChart.data.datasets[2].data.push(Number(data.ph));
+  sensorChart.data.datasets[0].data.push(chartNumber(data.temperature));
+  sensorChart.data.datasets[1].data.push(chartNumber(data.moisture));
+  sensorChart.data.datasets[2].data.push(chartNumber(data.ph));
 
   while (sensorChart.data.labels.length > 40) {
     sensorChart.data.labels.shift();
@@ -297,8 +311,8 @@ const historyChart = new Chart(
         {
           label: "Moisture %",
           data: [],
-          borderColor: "#45a7ff",
-          backgroundColor: "#45a7ff",
+          borderColor: "#788d9b",
+          backgroundColor: "#788d9b",
           borderWidth: 2,
           pointRadius: 0,
           tension: .3
@@ -306,8 +320,8 @@ const historyChart = new Chart(
         {
           label: "Temperature °C",
           data: [],
-          borderColor: "#45f28b",
-          backgroundColor: "#45f28b",
+          borderColor: "#6a8057",
+          backgroundColor: "#6a8057",
           borderWidth: 2,
           pointRadius: 0,
           tension: .3
@@ -315,8 +329,8 @@ const historyChart = new Chart(
         {
           label: "pH",
           data: [],
-          borderColor: "#a874ff",
-          backgroundColor: "#a874ff",
+          borderColor: "#aa8b65",
+          backgroundColor: "#aa8b65",
           borderWidth: 2,
           pointRadius: 0,
           tension: .3
@@ -336,18 +350,18 @@ const historyChart = new Chart(
             boxWidth: 7,
             padding: 17,
             color: "#718692",
-            font: { size: 9 }
+            font: { size: 10 }
           }
         }
       },
       scales: {
         x: {
           grid: { color: "rgba(127,146,158,.08)" },
-          ticks: { color: "#647985", maxTicksLimit: 8, font: { size: 8 } }
+          ticks: { color: "#647985", maxTicksLimit: 8, font: { size: 10 } }
         },
         y: {
           grid: { color: "rgba(127,146,158,.08)" },
-          ticks: { color: "#647985", font: { size: 8 } }
+          ticks: { color: "#647985", font: { size: 10 } }
         }
       }
     }
@@ -355,6 +369,38 @@ const historyChart = new Chart(
 );
 
 document.getElementById("historyChartRange").addEventListener("change", renderHistory);
+let overviewRange = 1440;
+const overviewChart = new Chart(document.getElementById('overviewChart'), {
+  type:'line', data:{labels:[], datasets:[{label:'Moisture %', data:[], borderColor:'#6a8057', backgroundColor:'rgba(106,128,87,.07)', fill:true, borderWidth:2, pointRadius:0, pointHoverRadius:4, tension:.3}]},
+  options:{responsive:true, maintainAspectRatio:false, animation:false, interaction:{intersect:false,mode:'index'}, plugins:{legend:{display:false}}, scales:{x:{grid:{display:false},border:{display:false},ticks:{maxTicksLimit:5,font:{size:9},maxRotation:0}}, y:{min:0,max:100,border:{display:false},grid:{color:'rgba(120,130,100,.1)'},ticks:{stepSize:25,padding:10,font:{size:9}}}}}
+});
+function renderOverviewTrend() {
+  const rows = filterHistoryByMinutes(overviewRange);
+  overviewChart.data.labels = rows.map(s => new Date(tsMs(s)).toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}));
+  overviewChart.data.datasets[0].data = rows.map(s => chartNumber(s.moisture));
+  overviewChart.update('none');
+  document.getElementById('overviewEmpty').hidden = rows.some(s => validNumber(s.moisture));
+  document.getElementById('overviewCoverage').textContent = rows.length ? rows.length + ' samples' : 'No samples yet';
+  document.getElementById('overviewPeriod').textContent = rows.length ? new Date(tsMs(rows.at(-1))).toLocaleDateString([], {day:'numeric',month:'short',year:'numeric'}) + ' · Most recent recorded window' : 'Recorded measurements will appear here';
+}
+document.querySelectorAll('[data-overview-range]').forEach(button => button.addEventListener('click', () => {
+  overviewRange = Number(button.dataset.overviewRange);
+  document.querySelectorAll('[data-overview-range]').forEach(b => { const active = b === button; b.classList.toggle('active', active); b.setAttribute('aria-pressed', String(active)); });
+  renderOverviewTrend();
+}));
+function recolorCharts() {
+  const styles = getComputedStyle(document.documentElement);
+  const muted = styles.getPropertyValue('--muted').trim();
+  const colors = ['--green', '--blue', '--orange'].map(v => styles.getPropertyValue(v).trim());
+  [sensorChart, historyChart, overviewChart].forEach(chart => {
+    chart.data.datasets.forEach((d,i) => { d.borderColor = colors[i % colors.length]; if(chart !== overviewChart) d.backgroundColor = d.borderColor; });
+    chart.options.scales.x.ticks.color = muted; chart.options.scales.y.ticks.color = muted;
+    if(chart.options.plugins.legend.labels) chart.options.plugins.legend.labels.color = muted;
+    chart.update('none');
+  });
+}
+recolorCharts();
+
 
 /* =========================================================
    LIVE VALUES / DASHBOARD
@@ -404,9 +450,9 @@ function updateLiveValues(data) {
 function liveHealthScore(data) {
   let score = 100;
 
-  const m = Number(data.moisture);
-  const p = Number(data.ph);
-  const t = Number(data.temperature);
+  const m = chartNumber(data.moisture);
+  const p = chartNumber(data.ph);
+  const t = chartNumber(data.temperature);
   const ec = Number(data.ec);
 
   if (Number.isFinite(m) && (m < 30 || m > 80)) score -= 20;
@@ -418,6 +464,15 @@ function liveHealthScore(data) {
 }
 
 function updateDashboardCondition(data) {
+  if (![data.moisture, data.ph, data.temperature, data.ec].every(validNumber)) {
+    document.getElementById('dashHealthScore').textContent = '—';
+    document.getElementById('dashHealthRing').style.background = 'var(--surface-3)';
+    document.getElementById('dashHealthBadge').className = 'status-pill neutral';
+    document.getElementById('dashHealthBadge').textContent = 'Incomplete data';
+    document.getElementById('dashHealthTitle').textContent = 'A few readings are missing.';
+    document.getElementById('dashHealthText').textContent = 'Moisture, pH, temperature and conductivity are needed to calculate a condition score.';
+    return;
+  }
   const score = liveHealthScore(data);
   const ring = document.getElementById("dashHealthRing");
   const badge = document.getElementById("dashHealthBadge");
@@ -431,12 +486,12 @@ function updateDashboardCondition(data) {
 
   badge.className = "status-pill";
 
-  if (score >= 80) {
+  if (score === 100) {
     badge.classList.add("good");
     badge.textContent = "Healthy";
-    title.textContent = "Current readings look stable";
+    title.textContent = "Latest readings are in range";
     text.textContent =
-      "The current monitored soil values are within the prototype preferred ranges.";
+      "The latest measured soil values are within the prototype preferred ranges.";
   } else if (score >= 60) {
     badge.classList.add("warning");
     badge.textContent = "Attention";
@@ -457,33 +512,16 @@ function updateDashboardCondition(data) {
 ========================================================= */
 
 function setConnection(online) {
-  const dots = [
-    document.getElementById("sidebarStatusDot"),
-    document.getElementById("topStatusDot")
-  ];
-
-  dots.forEach(dot => {
-    dot.className = `online-dot ${online ? "online" : "offline"}`;
-  });
-
-  document.getElementById("sidebarDeviceStatus").textContent =
-    online ? "Device Online" : "Device Offline";
-
-  document.getElementById("topStatusText").textContent =
-    online ? "Online" : "Offline";
-
-  if (online) {
-    lastFirebaseUpdate = Date.now();
-    document.getElementById("sidebarLastUpdate").textContent =
-      `Updated ${new Date().toLocaleTimeString()} · device 10s`;
-  }
+  for (const id of ['sidebarStatusDot', 'topStatusDot']) document.getElementById(id).className = 'online-dot ' + (online ? 'online' : 'offline');
+  document.getElementById('sidebarDeviceStatus').textContent = online ? 'Station online' : 'Station offline';
+  document.getElementById('topStatusText').textContent = online ? 'Online' : 'Offline';
+  document.getElementById('liveFeedBadge').innerHTML = '<span></span>' + (online ? 'Live readings' : 'Awaiting readings');
+  const stamp = currentLiveData ? tsMs(currentLiveData) : null;
+  document.getElementById('readingAge').textContent = stamp ? (online ? 'Updated ' : 'Last reading ') + new Date(stamp).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : 'Awaiting sensor data';
+  document.getElementById('sidebarLastUpdate').textContent = stamp ? 'Last reading ' + new Date(stamp).toLocaleString([], {month:'short',day:'numeric',hour:'2-digit',minute:'2-digit'}) : 'Waiting for a reading';
 }
-
-setInterval(() => {
-  if (lastFirebaseUpdate && Date.now() - lastFirebaseUpdate > 30000) {
-    setConnection(false);
-  }
-}, 3000);
+function isReadingFresh() { const stamp = currentLiveData ? tsMs(currentLiveData) : null; return Boolean(stamp && Date.now() - stamp < 30000 && stamp - Date.now() < 60000); }
+setInterval(() => { if (currentLiveData) setConnection(isReadingFresh()); }, 3000);
 
 /* =========================================================
    HISTORY
@@ -518,6 +556,7 @@ function filterHistoryByMinutes(minutes) {
 }
 
 function renderHistory() {
+  renderOverviewTrend();
   const countEl = document.getElementById("historyCount");
   const coverageEl = document.getElementById("historyCoverageCard");
   const avgMoistureEl = document.getElementById("historyAvgMoisture");
@@ -540,9 +579,9 @@ function renderHistory() {
     new Date(tsMs(s)).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })
   );
 
-  historyChart.data.datasets[0].data = chartRows.map(s => Number(s.moisture));
-  historyChart.data.datasets[1].data = chartRows.map(s => Number(s.temperature));
-  historyChart.data.datasets[2].data = chartRows.map(s => Number(s.ph));
+  historyChart.data.datasets[0].data = chartRows.map(s => chartNumber(s.moisture));
+  historyChart.data.datasets[1].data = chartRows.map(s => chartNumber(s.temperature));
+  historyChart.data.datasets[2].data = chartRows.map(s => chartNumber(s.ph));
   historyChart.update("none");
 
   const rows = [...historicalSamples]
@@ -573,7 +612,7 @@ function renderHistory() {
 
 document.getElementById("downloadHistoryButton").addEventListener("click", () => {
   if (!historicalSamples.length) {
-    alert("No history data is available to download yet.");
+    showNotice("No measurements to export yet. Your records will appear when the station sends data.");
     return;
   }
 
@@ -613,7 +652,8 @@ document.getElementById("downloadHistoryButton").addEventListener("click", () =>
   document.body.appendChild(a);
   a.click();
   a.remove();
-  URL.revokeObjectURL(url);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+  showNotice(`CSV prepared with ${historicalSamples.length} readings.`);
 });
 
 
@@ -633,6 +673,7 @@ function openClearHistoryModal() {
   clearHistoryModal.classList.add("open");
   clearHistoryModal.setAttribute("aria-hidden", "false");
   document.body.classList.add("modal-open");
+  cancelClearHistoryButton.focus();
 }
 
 function closeClearHistoryModal() {
@@ -641,6 +682,7 @@ function closeClearHistoryModal() {
   clearHistoryModal.classList.remove("open");
   clearHistoryModal.setAttribute("aria-hidden", "true");
   document.body.classList.remove("modal-open");
+  clearHistoryButton.focus();
 }
 
 clearHistoryButton.addEventListener("click", openClearHistoryModal);
@@ -663,7 +705,8 @@ confirmClearHistoryButton.addEventListener("click", async () => {
   clearHistoryStatus.textContent = "Clearing Firebase history...";
 
   try {
-    await remove(historyRef);
+    if (!removeHistory) throw new Error("The data connection is unavailable.");
+    await removeHistory();
 
     historicalSamples = [];
     renderHistory();
@@ -834,7 +877,7 @@ function updateLocationUI() {
 
   document.getElementById("settingsCurrentLocation").textContent = monitoringLocation.label;
   document.getElementById("settingsCurrentCoordinates").textContent =
-    `${lat.toFixed(5)}° ${lat >= 0 ? "N" : "S"}, ${Math.abs(lon).toFixed(5)}° ${lon >= 0 ? "E" : "W"}`;
+    `${Math.abs(lat).toFixed(5)}° ${lat >= 0 ? "N" : "S"}, ${Math.abs(lon).toFixed(5)}° ${lon >= 0 ? "E" : "W"}`;
 
   document.getElementById("latitudeInput").value = lat;
   document.getElementById("longitudeInput").value = lon;
@@ -955,7 +998,7 @@ function applyLocation(location, save = false) {
   monitoringLocation = location;
 
   if (save && location.source !== "firebase") {
-    localStorage.setItem(LOCATION_KEY, JSON.stringify(location));
+    storePreference(LOCATION_KEY, JSON.stringify(location));
   }
 
   updateLocationUI();
@@ -970,8 +1013,10 @@ function applyLocation(location, save = false) {
 }
 
 document.getElementById("saveLocationButton").addEventListener("click", () => {
-  const lat = Number(document.getElementById("latitudeInput").value);
-  const lon = Number(document.getElementById("longitudeInput").value);
+  const latInput = document.getElementById("latitudeInput").value.trim();
+  const lonInput = document.getElementById("longitudeInput").value.trim();
+  const lat = latInput === "" ? NaN : Number(latInput);
+  const lon = lonInput === "" ? NaN : Number(lonInput);
   const label = document.getElementById("locationNameInput").value.trim() || "Monitoring site";
   const error = document.getElementById("locationError");
 
@@ -988,10 +1033,11 @@ document.getElementById("saveLocationButton").addEventListener("click", () => {
   }
 
   applyLocation({ latitude: lat, longitude: lon, label, source: "browser" }, true);
+  showNotice("Location saved. Updating your weather context.");
 });
 
 document.getElementById("resetLocationButton").addEventListener("click", () => {
-  localStorage.removeItem(LOCATION_KEY);
+  try { localStorage.removeItem(LOCATION_KEY); } catch (_) {}
   applyLocation(DEFAULT_LOCATION, false);
 });
 
@@ -1143,7 +1189,7 @@ if (explodeDeviceButton && assembleDeviceButton && integratedDeviceStage) {
    FIREBASE LIVE
 ========================================================= */
 
-const liveRef = ref(database, "devices/agrosentra-001/live");
+let removeHistory = null;
 
 function applyLiveData(data, source = "realtime") {
   if (!data) return;
@@ -1166,7 +1212,8 @@ function applyLiveData(data, source = "realtime") {
   updateLiveValues(data);
   updateDashboardCondition(data);
   addLiveChartReading(data);
-  setConnection(true);
+  lastFirebaseUpdate = Date.now();
+  setConnection(isReadingFresh());
   renderAnalytics();
 
   const refreshText = document.getElementById("liveRefreshText");
@@ -1175,54 +1222,39 @@ function applyLiveData(data, source = "realtime") {
   }
 }
 
-onValue(
-  liveRef,
-  snapshot => {
-    if (!snapshot.exists()) {
-      document.getElementById("firebaseStatus").textContent = "No Data";
-      return;
-    }
-
-    applyLiveData(snapshot.val(), "realtime");
-  },
-  error => {
-    console.error("Firebase live error:", error);
-    document.getElementById("firebaseStatus").textContent = "Firebase Error";
+async function connectData() {
+  try {
+    const [{database}, sdk] = await Promise.all([import('./firebase-config.js'), import('https://www.gstatic.com/firebasejs/12.18.0/firebase-database.js')]);
+    const { ref, onValue, remove, query, orderByChild, limitToLast } = sdk;
+    const liveRef = ref(database, 'devices/agrosentra-001/live');
+    const historyRef = ref(database, 'devices/agrosentra-001/history');
+    removeHistory = () => remove(historyRef);
+    onValue(liveRef, snapshot => {
+      if (snapshot.exists()) applyLiveData(snapshot.val());
+      else { document.getElementById('firebaseStatus').textContent = 'No readings yet'; setConnection(false); }
+    }, () => { document.getElementById('firebaseStatus').textContent = 'Connection unavailable'; setConnection(false); });
+    onValue(query(historyRef, orderByChild('timestamp'), limitToLast(1440)), snapshot => {
+      const rows = []; snapshot.forEach(child => { const value = child.val(); if(value) rows.push({ id:child.key, ...value }); });
+      historicalSamples = rows; renderHistory(); renderAnalytics();
+    }, () => {
+      document.getElementById('historyTableBody').innerHTML = '<tr><td colspan="9" class="empty-row">History is unavailable. Check your connection and database access.</td></tr>';
+      document.getElementById('overviewCoverage').textContent = 'History unavailable';
+    });
+  } catch (error) {
+    console.warn('The data connection is unavailable.', error);
+    document.getElementById('firebaseStatus').textContent = 'Connection unavailable';
+    document.getElementById('historyTableBody').innerHTML = '<tr><td colspan="9" class="empty-row">Unable to connect. Reload when your connection is restored.</td></tr>';
     setConnection(false);
   }
-);
+}
+setTimeout(() => { if (!lastFirebaseUpdate) setConnection(false); }, 10000);
+connectData();
 
-
-
-/* =========================================================
-   FIREBASE HISTORY
-========================================================= */
-
-const historyRef = ref(database, "devices/agrosentra-001/history");
-
-const historyQuery = query(
-  historyRef,
-  orderByChild("timestamp"),
-  limitToLast(1440)
-);
-
-onValue(
-  historyQuery,
-  snapshot => {
-    const rows = [];
-
-    snapshot.forEach(child => {
-      const value = child.val();
-      if (value) rows.push({ id: child.key, ...value });
-    });
-
-    historicalSamples = rows;
-    renderHistory();
-    renderAnalytics();
-  },
-  error => {
-    console.error("Firebase history error:", error);
-    document.getElementById("historyTableBody").innerHTML =
-      `<tr><td colspan="9" class="empty-row">History could not be loaded. Check Firebase database rules.</td></tr>`;
-  }
-);
+document.addEventListener('keydown', event => {
+  if (event.key !== 'Tab' || !clearHistoryModal.classList.contains('open')) return;
+  const buttons = [...clearHistoryModal.querySelectorAll('button:not(:disabled)')];
+  if (!buttons.length) { event.preventDefault(); return; }
+  const first=buttons[0], last=buttons.at(-1);
+  if(event.shiftKey && document.activeElement === first) { event.preventDefault(); last.focus(); }
+  else if(!event.shiftKey && document.activeElement === last) { event.preventDefault(); first.focus(); }
+});

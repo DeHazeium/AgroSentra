@@ -3,25 +3,25 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#03080c">
-  <title>AgroSentra001 | Exploded Assembly</title>
+  <meta name="theme-color" content="#f7f8f4">
+  <title>Hardware explorer — AgroSentra</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="./exploded-view.css?v=4">
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./exploded-view.css">
   <script>
   (function(){
     try {
-      const t=localStorage.getItem('agrosentra-theme-v2')||'dark';
-      document.documentElement.dataset.theme=['dark','midnight','light'].includes(t)?t:'dark';
-    } catch(e){document.documentElement.dataset.theme='dark';}
+      const t=localStorage.getItem('agrosentra-theme-v3')||'light';
+      document.documentElement.dataset.theme=['dark','midnight','light'].includes(t)?t:'light';
+    } catch(e){document.documentElement.dataset.theme='light';}
   })();
   </script>
 </head>
 <body>
   <header class="topbar">
-    <a class="back" href="./index.html#device">← Back to Device Info</a>
-    <img src="./agrosentra-logo.png" class="brand" alt="AgroSentra">
+    <a class="back" href="./index.html#device">← Back to device</a>
+    <a class="brand" href="./index.html#dashboard">AgroSentra<span>.</span></a>
     <div class="actions">
       <button id="toggleAssembly" type="button">Assemble</button>
       <button id="replay" type="button">Replay</button>
@@ -32,7 +32,7 @@
     <section class="intro">
       <span>AGROSENTRA001 · INTERNAL HARDWARE</span>
       <h1>Exploded assembly</h1>
-      <p>The internal modules separate from a compact stack into an engineering-style exploded view.</p>
+      <p>A look beneath the enclosure. Five modules, working together.</p>
     </section>
 
     <section class="exploded-card">
@@ -44,7 +44,7 @@
         <div class="state"><i></i><b id="stateText">Separating components</b></div>
       </div>
 
-      <div id="scene" class="scene assembled">
+      <div id="scene" class="scene assembled" aria-label="Five internal hardware modules">
         <div class="axis axis-desktop"></div>
         <div class="axis axis-mobile"></div>
 
@@ -79,7 +79,7 @@
         </div>
       </div>
 
-      <div class="hint">Desktop: components separate horizontally. Phone: components separate vertically. Use <b>Assemble</b> or <b>Replay</b> anytime.</div>The assembly automatically separates on load. Use <b>Assemble</b> to bring the hardware back together.</div>
+      <div class="hint">From display to power monitoring. Use <b>Assemble</b> to bring the components together, or <b>Replay</b> to take another look.</div>
     </section>
   </main>
   <script src="./exploded-view.js?v=4"></script>

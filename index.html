@@ -3,80 +3,39 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#05090d">
-  <title>AgroSentra001 | Soil Monitoring</title>
-
+  <meta name="theme-color" content="#f7f8f4">
+  <meta name="description" content="AgroSentra — a clear view of your soil. Live readings, field history, and environmental context.">
+  <title>AgroSentra — Field notes</title>
+  <link rel="icon" type="image/svg+xml" href="./favicon.svg">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-
-  <link rel="stylesheet" href="./styles.css?v=12">
-
-  <script src="https://unpkg.com/lucide@latest"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
-<script>
-(function () {
-  try {
-    const savedTheme = localStorage.getItem("agrosentra-theme-v2") || "dark";
-    const allowed = ["dark", "midnight", "light"];
-    document.documentElement.dataset.loaderTheme =
-      allowed.includes(savedTheme) ? savedTheme : "dark";
-  } catch (_) {
-    document.documentElement.dataset.loaderTheme = "dark";
-  }
-})();
-</script>
-
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;450;500;550;600;650;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="./styles.css">
+  <script src="./lucide.min.js"></script>
+  <script src="./chart.umd.js"></script>
+  <script>try { document.documentElement.dataset.theme = localStorage.getItem('agrosentra-theme-v3') || 'light'; } catch (_) {}</script>
 </head>
 
-<body data-theme="dark" class="agrosentra-app">
-
-<div id="agrosentraLoader" class="agrosentra-loader" aria-label="Loading AgroSentra">
-  <div class="premium-loader">
-    <div class="premium-loader-logo-wrap">
-      <div class="premium-loader-glow"></div>
-      <img src="./agrosentra-logo.png" alt="AgroSentra" class="premium-loader-logo">
-    </div>
-
-    <div class="premium-loader-meta">
-      <span>AGROSENTRA001</span>
-      <small>Soil Monitoring System</small>
-    </div>
-
-    <div class="premium-loader-line">
-      <span></span>
-    </div>
-  </div>
-</div>
-
-
-<div class="ambient ambient-a"></div>
-<div class="ambient ambient-b"></div>
-
+<body class="agrosentra-app">
+<a class="skip-link" href="#mainContent">Skip to content</a>
 <div class="app-shell">
 
   <aside class="sidebar">
-    <div class="sidebar-brand">
-      <div class="brand-glow"></div>
-      <img src="./agrosentra-logo.png" alt="AgroSentra" class="sidebar-logo">
-
-      <div class="developer-credit">
-        <span>irfan@fke</span>
-        <strong>Sentra Labs</strong>
-        <span>UiTMCS</span>
-      </div>
-    </div>
-
-    <nav class="main-nav">
+    <a class="sidebar-brand" href="#dashboard" aria-label="AgroSentra overview">
+      <svg class="brand-mark" viewBox="0 0 32 32" fill="none" aria-hidden="true"><path d="M7 24V14c0-5 4-9 9-9s9 4 9 9v10M13 24V14a3 3 0 0 1 6 0v10M3 24h26" stroke="currentColor" stroke-width="2"/></svg>
+      <span>AgroSentra<span class="brand-period">.</span><small>FIELD NOTES / 001</small></span>
+    </a>
+    <div class="workspace-label"><span class="workspace-icon">A</span><span>My workspace<small>Soil monitoring</small></span><i data-lucide="chevrons-up-down"></i></div>
+    <span class="nav-label">WORKSPACE</span>
+    <nav id="mainNav" class="main-nav" aria-label="Main navigation">
       <button class="nav-item active" data-view="dashboard">
         <i data-lucide="layout-dashboard"></i>
-        <span>Dashboard</span>
+        <span>Overview</span>
       </button>
 
       <button class="nav-item" data-view="live">
         <i data-lucide="activity"></i>
-        <span>Live Soil Data</span>
+        <span>Live readings</span>
       </button>
 
       <button class="nav-item" data-view="history">
@@ -87,18 +46,18 @@
       <div class="nav-divider"></div>
 
       <button class="nav-item accent-nav" data-view="analytics">
-        <i data-lucide="sparkles"></i>
-        <span>AI Analytics</span>
+        <i data-lucide="chart-no-axes-combined"></i>
+        <span>Soil insights</span>
       </button>
 
       <button class="nav-item accent-nav" data-view="weather">
         <i data-lucide="cloud-sun"></i>
-        <span>External Weather</span>
+        <span>Weather</span>
       </button>
 
       <button class="nav-item accent-nav" data-view="device">
         <i data-lucide="cpu"></i>
-        <span>Device Info</span>
+        <span>Device</span>
       </button>
 
       <div class="nav-divider"></div>
@@ -109,28 +68,29 @@
       </button>
     </nav>
 
-    <div class="sidebar-status">
+    <div class="sidebar-bottom"><div class="sidebar-station"><span>CONNECTED STATION</span><strong>AgroSentra 001 <i data-lucide="radio"></i></strong></div><div class="sidebar-status">
       <span id="sidebarStatusDot" class="online-dot waiting"></span>
       <div>
         <strong id="sidebarDeviceStatus">Connecting...</strong>
-        <span id="sidebarLastUpdate">Waiting for Firebase · device 10s</span>
+        <span id="sidebarLastUpdate">Waiting for a reading</span>
       </div>
     </div>
+    <div class="sidebar-credit"><span>Sentra Labs</span><span>irfan@fke · UiTMCS</span></div></div>
   </aside>
 
-  <main class="main-content">
+  <main class="main-content" id="mainContent" tabindex="-1">
 
     <header class="topbar">
-      <button class="mobile-menu" id="mobileMenuButton" aria-label="Open menu">
+      <button class="mobile-menu" id="mobileMenuButton" aria-label="Open menu" aria-expanded="false" aria-controls="mainNav">
         <i data-lucide="menu"></i>
       </button>
 
       <div class="page-heading">
-        <span id="pageEyebrow">AGROSENTRA001</span>
-        <h1 id="pageTitle">Dashboard</h1>
+        <span id="pageEyebrow">Workspace</span><span class="breadcrumb-slash">/</span>
+        <span id="pageTitle">Overview</span>
       </div>
 
-      <div class="topbar-actions">
+      <div class="topbar-actions"><span class="today-date" id="todayDate"></span>
         <div class="location-chip">
           <i data-lucide="map-pin"></i>
           <span id="topbarLocation">The Waterfront Hotel, Kuching</span>
@@ -149,139 +109,39 @@
     <!-- ===================================================
          DASHBOARD
     ==================================================== -->
-    <section class="view active" id="view-dashboard">
+    <section class="view active" id="view-dashboard" aria-label="Overview">
 
-      <article class="hero-card">
-        <div class="hero-copy">
-          <span class="eyebrow">SOIL MONITORING SYSTEM</span>
-          <h2>Monitor your soil.<br><span>Understand the change.</span></h2>
-          <p>
-            AgroSentra001 combines real-time soil measurements, historical trends,
-            environmental context and local analytics in one monitoring platform.
-          </p>
 
-          <div class="hero-actions">
-            <button class="primary-action" data-jump="live">
-              <i data-lucide="activity"></i>
-              View live soil data
-            </button>
-
-            <button class="secondary-action" data-jump="analytics">
-              <i data-lucide="sparkles"></i>
-              Open analytics
-            </button>
-          </div>
-        </div>
-
-        <div class="hero-device">
-          <div class="hero-device-glow"></div>
-          <img src="./agrosentra001-model-v2.png?v=6" alt="AgroSentra001 monitoring unit">
-        </div>
-      </article>
-
+      <div class="overview-intro">
+        <div><span class="eyebrow">YOUR FIELD, AT A GLANCE</span><h1>Stay close to your soil<span>.</span></h1><p>The small changes. The bigger picture. All in one place.</p></div>
+        <button class="secondary-action" data-jump="history"><i data-lucide="arrow-down-to-line"></i> Export data</button>
+      </div>
+      <div class="section-rule"><h2>Latest readings</h2><span><span class="tiny-dot"></span> Station 001 <span class="rule-separator">/</span> <span id="readingAge">Awaiting sensor data</span></span></div>
       <div class="dashboard-summary-grid">
-        <article class="summary-card green">
-          <div class="summary-icon"><i data-lucide="droplets"></i></div>
-          <div>
-            <span>Soil Moisture</span>
-            <strong><b id="dashMoisture">--</b><small>%</small></strong>
-          </div>
+        <article class="summary-card"><div class="metric-heading"><span>Soil moisture</span><i data-lucide="droplets"></i></div><strong><b id="dashMoisture">—</b><small>%</small></strong><div class="metric-foot"><span>Water content</span><span class="metric-index">01</span></div></article>
+        <article class="summary-card"><div class="metric-heading"><span>Soil pH</span><i data-lucide="flask-conical"></i></div><strong><b id="dashPh">—</b><small>pH</small></strong><div class="metric-foot"><span>Acidity & alkalinity</span><span class="metric-index">02</span></div></article>
+        <article class="summary-card"><div class="metric-heading"><span>Temperature</span><i data-lucide="thermometer"></i></div><strong><b id="dashTemperature">—</b><small>°C</small></strong><div class="metric-foot"><span>Below the surface</span><span class="metric-index">03</span></div></article>
+        <article class="summary-card"><div class="metric-heading"><span>Conductivity</span><i data-lucide="activity"></i></div><strong><b id="dashEc">—</b><small>µS/cm</small></strong><div class="metric-foot"><span>Dissolved minerals</span><span class="metric-index">04</span></div></article>
+      </div>
+      <div class="overview-middle">
+        <article class="panel field-trend">
+          <div class="panel-heading"><div><span class="eyebrow">A CLOSER LOOK</span><h2>Moisture over time</h2></div><div class="range-switch" role="group" aria-label="Trend time range"><button data-overview-range="60" aria-pressed="false">1h</button><button data-overview-range="360" aria-pressed="false">6h</button><button data-overview-range="1440" class="active" aria-pressed="true">24h</button></div></div>
+          <div class="trend-meta"><span><i class="legend-line"></i> Soil moisture <small>(%)</small></span><span id="overviewCoverage">No samples yet</span></div>
+          <div class="chart-wrap overview-chart-wrap"><canvas id="overviewChart" role="img" aria-label="Soil moisture history"></canvas><div class="chart-empty" id="overviewEmpty"><i data-lucide="chart-spline"></i><strong>A little time tells a lot.</strong><span>Your soil’s story starts with the first reading.</span></div></div>
+          <div class="chart-bottom"><span id="overviewPeriod">Recorded measurements will appear here</span><button class="text-action" data-jump="history">View history <i data-lucide="arrow-up-right"></i></button></div>
         </article>
-
-        <article class="summary-card blue">
-          <div class="summary-icon"><i data-lucide="flask-conical"></i></div>
-          <div>
-            <span>Soil pH</span>
-            <strong><b id="dashPh">--</b><small>pH</small></strong>
-          </div>
-        </article>
-
-        <article class="summary-card orange">
-          <div class="summary-icon"><i data-lucide="thermometer"></i></div>
-          <div>
-            <span>Soil Temperature</span>
-            <strong><b id="dashTemperature">--</b><small>°C</small></strong>
-          </div>
-        </article>
-
-        <article class="summary-card purple">
-          <div class="summary-icon"><i data-lucide="radio-tower"></i></div>
-          <div>
-            <span>Conductivity</span>
-            <strong><b id="dashEc">--</b><small>µS/cm</small></strong>
-          </div>
+        <article class="station-card">
+          <div class="station-top"><span class="eyebrow">OUT IN THE FIELD</span><span class="station-number">001</span></div>
+          <div class="station-image"><span class="station-cross cross-one">+</span><span class="station-cross cross-two">+</span><img src="./agrosentra001-model-v2.png" alt="AgroSentra soil monitoring unit and probe"></div>
+          <div class="station-caption"><div><h2>A good listener.</h2><p>Ten channels. One connected station.</p></div><button class="round-action" data-jump="device" aria-label="Explore your device"><i data-lucide="arrow-up-right"></i></button></div>
         </article>
       </div>
-
       <div class="dashboard-lower">
         <article class="panel overview-panel">
-          <div class="panel-heading">
-            <div>
-              <span class="eyebrow">CURRENT OVERVIEW</span>
-              <h3>Soil condition</h3>
-            </div>
-            <span id="dashHealthBadge" class="status-pill neutral">Waiting</span>
-          </div>
-
-          <div class="overview-content">
-            <div class="mini-health-ring" id="dashHealthRing">
-              <div>
-                <strong id="dashHealthScore">--</strong>
-                <span>/100</span>
-              </div>
-            </div>
-
-            <div class="overview-text">
-              <h4 id="dashHealthTitle">Collecting soil data</h4>
-              <p id="dashHealthText">
-                AgroSentra is waiting for enough live readings to evaluate the current condition.
-              </p>
-
-              <div class="overview-meta">
-                <span><i data-lucide="wifi"></i><b id="dashRssi">--</b></span>
-                <span><i data-lucide="clock-3"></i><b id="dashUptime">--</b></span>
-              </div>
-            </div>
-          </div>
+          <div class="panel-heading"><div><span class="eyebrow">HOW THINGS LOOK</span><h2>Soil condition</h2></div><span id="dashHealthBadge" class="status-pill neutral">Awaiting data</span></div>
+          <div class="overview-content"><div class="mini-health-ring" id="dashHealthRing"><div><strong id="dashHealthScore">—</strong><span>/ 100</span></div></div><div class="overview-text"><h3 id="dashHealthTitle">Getting to know your soil.</h3><p id="dashHealthText">A condition score will appear as measurements arrive from your station.</p><div class="overview-meta"><span><i data-lucide="wifi"></i><b id="dashRssi">—</b></span><span><i data-lucide="clock-3"></i><b id="dashUptime">—</b></span></div></div></div>
         </article>
-
-        <article class="panel quick-access-panel">
-          <div class="panel-heading">
-            <div>
-              <span class="eyebrow">EXPLORE</span>
-              <h3>More from AgroSentra</h3>
-            </div>
-          </div>
-
-          <div class="quick-access-grid">
-            <button class="quick-link analytics-link" data-jump="analytics">
-              <i data-lucide="sparkles"></i>
-              <div>
-                <strong>AI Analytics</strong>
-                <span>Trends, anomalies and interpretation</span>
-              </div>
-              <i data-lucide="arrow-up-right"></i>
-            </button>
-
-            <button class="quick-link weather-link" data-jump="weather">
-              <i data-lucide="cloud-sun"></i>
-              <div>
-                <strong>External Weather</strong>
-                <span>Rainfall and environmental context</span>
-              </div>
-              <i data-lucide="arrow-up-right"></i>
-            </button>
-
-            <button class="quick-link device-link" data-jump="device">
-              <i data-lucide="cpu"></i>
-              <div>
-                <strong>Device Info</strong>
-                <span>AgroSentra001 hardware overview</span>
-              </div>
-              <i data-lucide="arrow-up-right"></i>
-            </button>
-          </div>
-        </article>
+        <article class="field-notes"><span class="eyebrow">THERE’S MORE TO THE STORY</span><button class="quick-link" data-jump="analytics"><span class="quick-number">01</span><div><strong>Read between the readings</strong><span>Trends, patterns & soil insights</span></div><i data-lucide="arrow-up-right"></i></button><button class="quick-link" data-jump="weather"><span class="quick-number">02</span><div><strong>Keep an eye on the sky</strong><span>Weather around your monitoring site</span></div><i data-lucide="arrow-up-right"></i></button></article>
       </div>
     </section>
 
@@ -292,11 +152,11 @@
       <div class="section-intro">
         <div>
           <span class="eyebrow">REAL-TIME MEASUREMENTS</span>
-          <h2>Live Soil Data</h2>
-          <p>All current probe and power-monitoring values update directly from Firebase.</p>
+          <h1>Live readings</h1>
+          <p>Every measurement, as it comes in from your station.</p>
         </div>
 
-        <div class="live-badge"><span></span> LIVE</div>
+        <div class="live-badge" id="liveFeedBadge"><span></span> Awaiting readings</div>
       </div>
 
       <div class="live-layout">
@@ -310,7 +170,7 @@
           </div>
 
           <div class="chart-wrap">
-            <canvas id="sensorChart"></canvas>
+            <canvas id="sensorChart" role="img" aria-label="Live soil measurements"></canvas>
           </div>
         </article>
 
@@ -387,8 +247,8 @@
       <div class="section-intro">
         <div>
           <span class="eyebrow">RECORDED DATA</span>
-          <h2>History</h2>
-          <p>Review recent Firebase history and export the recorded soil dataset as CSV.</p>
+          <h1>History</h1>
+          <p>A record of what’s changed. Explore your measurements or take them with you.</p>
         </div>
 
         <div class="history-actions">
@@ -441,7 +301,7 @@
         </div>
 
         <div class="chart-wrap history-chart-wrap">
-          <canvas id="historyChart"></canvas>
+          <canvas id="historyChart" role="img" aria-label="Recorded soil history"></canvas>
         </div>
       </article>
 
@@ -485,9 +345,9 @@
     <section class="view" id="view-analytics">
       <div class="section-intro">
         <div>
-          <span class="eyebrow">LOCAL INTELLIGENT ANALYTICS</span>
-          <h2>AI Analytics</h2>
-          <p>Trend, baseline and anomaly interpretation generated from live and historical soil measurements.</p>
+          <span class="eyebrow">PATTERNS & OBSERVATIONS</span>
+          <h1>Soil insights</h1>
+          <p>Make sense of the patterns in your live and historical readings.</p>
         </div>
 
         <select id="analyticsWindow" class="ui-select">
@@ -582,8 +442,8 @@
       <div class="section-intro">
         <div>
           <span class="eyebrow">ENVIRONMENTAL CONTEXT</span>
-          <h2>External Weather</h2>
-          <p>Open-Meteo environmental data provides context for interpreting changes measured by AgroSentra001.</p>
+          <h1>Weather</h1>
+          <p>A little context from above ground. Weather near your monitoring site.</p>
         </div>
 
         <span class="context-sync" id="contextSyncBadge">
@@ -697,7 +557,7 @@
       <div class="section-intro">
         <div>
           <span class="eyebrow">HARDWARE MODEL</span>
-          <h2>AgroSentra001</h2>
+          <h1>AgroSentra001</h1>
           <p>Prototype soil monitoring unit with local LCD display, RS485 multi-parameter probe and Firebase connectivity.</p>
         </div>
 
@@ -835,7 +695,7 @@
           </div>
 
           <div class="assembly-order-strip">
-            <span>INTERNAL STACK</span>
+            <a class="text-action" href="./exploded-view.html">Open hardware explorer ↗</a>
             <strong>LCD → Grove Shield → ESP32 → MAX485 → INA219</strong>
           </div>
         </div>
@@ -892,8 +752,8 @@
       <div class="section-intro">
         <div>
           <span class="eyebrow">PREFERENCES</span>
-          <h2>Settings</h2>
-          <p>Customize the interface and choose the environmental-context monitoring location.</p>
+          <h1>Settings</h1>
+          <p>Make yourself at home. Set your appearance and monitoring location.</p>
         </div>
       </div>
 
@@ -907,19 +767,19 @@
           </div>
 
           <div class="theme-options" id="themeOptions">
-            <button data-theme-choice="dark" class="theme-option active">
+            <button data-theme-choice="dark" class="theme-option">
               <span class="theme-preview dark-preview"></span>
-              <div><strong>Agro Dark</strong><small>Original dark green</small></div>
+              <div><strong>Charcoal</strong><small>Quiet & focused</small></div>
             </button>
 
             <button data-theme-choice="midnight" class="theme-option">
               <span class="theme-preview midnight-preview"></span>
-              <div><strong>Midnight</strong><small>Blue-black technical</small></div>
+              <div><strong>Midnight</strong><small>After hours</small></div>
             </button>
 
             <button data-theme-choice="light" class="theme-option">
               <span class="theme-preview light-preview"></span>
-              <div><strong>Light</strong><small>Bright clean interface</small></div>
+              <div><strong>Paper</strong><small>A fresh perspective</small></div>
             </button>
           </div>
         </article>
@@ -962,7 +822,7 @@
             <input id="locationNameInput" type="text" maxlength="60" value="The Waterfront Hotel, Kuching">
           </label>
 
-          <div id="locationError" class="form-error"></div>
+          <div id="locationError" role="status" class="form-error"></div>
 
           <div class="settings-actions">
             <button class="secondary-action" id="resetLocationButton">
@@ -1008,54 +868,20 @@
           </button>
         </div>
 
-        <div class="confirm-modal-status" id="clearHistoryStatus"></div>
+        <div class="confirm-modal-status" id="clearHistoryStatus" role="status"></div>
       </div>
     </div>
 
 
-    <footer class="site-footer">
-      <span>AgroSentra001</span>
-      <span>Soil Monitoring Dashboard</span>
-    </footer>
+    <footer class="site-footer"><span>AgroSentra<span class="brand-period">.</span> <span class="footer-caption">A closer connection to the ground.</span></span><span>Made by Sentra Labs <span class="footer-mark">↗</span></span></footer>
   </main>
 </div>
 
 <div class="mobile-overlay" id="mobileOverlay"></div>
 
 
-<script>
-(function () {
-  const loader = document.getElementById("agrosentraLoader");
-  if (!loader) return;
 
-  const startedAt = performance.now();
-  const minimumVisibleTime = 900;
 
-  function hideLoader() {
-    const elapsed = performance.now() - startedAt;
-    const wait = Math.max(0, minimumVisibleTime - elapsed);
-
-    window.setTimeout(function () {
-      loader.classList.add("loader-exit");
-      document.body.classList.add("app-loaded");
-
-      window.setTimeout(function () {
-        loader.remove();
-      }, 520);
-    }, wait);
-  }
-
-  if (document.readyState === "complete") {
-    hideLoader();
-  } else {
-    window.addEventListener("load", hideLoader, { once: true });
-  }
-
-  /* Safety fallback so the page can never remain trapped behind the loader. */
-  window.setTimeout(hideLoader, 5000);
-})();
-</script>
-
-<script type="module" src="./app.js?v=12"></script>
+<script type="module" src="./app.js"></script>
 </body>
 </html>
