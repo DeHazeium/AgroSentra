@@ -58,7 +58,10 @@ function average(values) {
 function tsMs(sample) {
   if (!sample || !validNumber(sample.timestamp)) return null;
   const n = Number(sample.timestamp);
-  return n > 1e12 ? n : n * 1000;
+  const ms = n > 1e12 ? n : n * 1000;
+  // Ignore device uptime and malformed dates; they are not calendar timestamps.
+  if (ms < Date.UTC(2020, 0, 1) || ms > Date.now() + 86400000) return null;
+  return ms;
 }
 
 function clearStateClasses(el) {
@@ -528,10 +531,9 @@ setInterval(() => { if (currentLiveData) setConnection(isReadingFresh()); }, 300
 ========================================================= */
 
 function historyCoverage(samples) {
-  if (samples.length < 2) return samples.length ? "1 sample" : "--";
-
   const times = samples.map(tsMs).filter(Number.isFinite).sort((a,b) => a-b);
-  if (times.length < 2) return "--";
+  if (!times.length) return "--";
+  if (times.length === 1) return "1 sample";
 
   const minutes = Math.max(0, Math.round((times.at(-1) - times[0]) / 60000));
 
